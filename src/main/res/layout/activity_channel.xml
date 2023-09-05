@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/drawer_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <!-- Main content layout -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- ScrollView for Chat Messages -->
+        <ScrollView
+            android:id="@+id/scrollView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@+id/inputContainer"
+            android:scrollbars="vertical">
+
+            <TextView
+                android:id="@+id/chatTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:background="@android:color/transparent"
+                android:textColor="@color/irc_grey"
+                android:padding="16dp" />
+        </ScrollView>
+
+        <!-- Layout container for EditText and Send Button -->
+        <LinearLayout
+            android:id="@+id/inputContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="16dp">
+
+            <EditText
+                android:id="@+id/messageEditText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/enter_message"
+                android:imeOptions="actionSend"
+                android:maxLines="1" />
+
+            <Button
+                android:id="@+id/sendMessageButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:text="@string/send" />
+        </LinearLayout>
+
+        <!-- Open Drawer Button for Users -->
+        <Button
+            android:id="@+id/btnOpenDrawer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:background="@android:color/transparent"
+            android:rotation="90"
+            android:text="Users" />
+
+        <!-- Open Drawer Button for Chats -->
+        <Button
+            android:id="@+id/btnOpenLeftDrawer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:background="@android:color/transparent"
+            android:rotation="90"
+            android:text="Chats" />
+    </RelativeLayout>
+
+    <!-- Drawer content layout for Users -->
+    <RelativeLayout
+        android:id="@+id/rightDrawerContainer"
+        android:layout_width="180dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:background="#00000000">
+
+        <ListView
+            android:id="@+id/namesListView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#00000000"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="0.5dp"
+            android:padding="8dp" />
+    </RelativeLayout>
+
+    <!-- Drawer content layout for Chats -->
+    <RelativeLayout
+        android:id="@+id/leftDrawerContainer"
+        android:layout_width="180dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="#00000000">
+
+        <ListView
+            android:id="@+id/chatsListView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#00000000"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="0.5dp"
+            android:padding="8dp" />
+    </RelativeLayout>
+
+</androidx.drawerlayout.widget.DrawerLayout>

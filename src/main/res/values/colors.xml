@@ -1,0 +1,29 @@
+<resources>
+    <!-- Primary brand color -->
+    <color name="purple_500">#9C27B0</color>
+    <color name="purple_700">#7B1FA2</color>
+    <color name="purple_200">#E040FB</color>
+    <color name="white">#FFFFFF</color>
+    <!-- Secondary brand color -->
+    <color name="teal_200">#80CBC4</color>
+    <color name="teal_700">#00796B</color>
+    <color name="black">#000000</color>
+
+
+    <color name="irc_white">#FFFFFFFF</color>
+    <color name="irc_black">#FF000000</color>
+    <color name="irc_blue_navy">#FF00007F</color>
+    <color name="irc_green">#FF009300</color>
+    <color name="irc_red">#FFFC0000</color>
+    <color name="irc_brown_maroon">#FF7F0000</color>
+    <color name="irc_purple">#FF9C009C</color>
+    <color name="irc_orange_olive">#FFFC7F00</color>
+    <color name="irc_yellow">#FFFFFF00</color>
+    <color name="irc_light_green_lime">#FF00FC00</color>
+    <color name="irc_teal">#FF008080</color>
+    <color name="irc_light_cyan_cyan_aqua">#FF00FFFF</color>
+    <color name="irc_light_blue_royal">#FF0000FF</color>
+    <color name="irc_pink_light_purple_fuchsia">#FFFF00FF</color>
+    <color name="irc_grey">#FF7F7F7F</color>
+    <color name="irc_light_grey_silver">#FFD2D2D2</color>
+</resources>

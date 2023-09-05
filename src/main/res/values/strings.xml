@@ -1,0 +1,39 @@
+<resources>
+
+    <!-- App Name -->
+    <string name="app_name">Online Trivia</string>
+
+    <!-- IRC Client Related Strings -->
+    <string name="connection_status">Connection Status: %1$s</string>
+    <string name="connecting">Connecting…</string>
+    <string name="connected">Connected</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="connection_error">Connection Error: %1$s</string>
+    <string name="registration_error">Registration Timeout</string>
+    <string name="channel_message">Channel Message: %1$s</string>
+    <string name="private_message">Private Message: %1$s</string>
+
+    <!-- Errors -->
+    <string name="error_prefix">Error: </string>
+
+    <!-- Instructions or other UI strings -->
+    <string name="enter_message">Enter your message…</string>
+    <string name="send">Send</string>
+    <string name="ctcp_version">VERSION</string>
+    <string name="ctcp_ping">PING</string>
+    <string name="join_channel">Join Channel</string>
+
+    <!-- Popup prompts -->
+    <string name="change_nickname">Change Nickname</string>
+    <string name="new_nickname">New Nickname:</string>
+    <string name="ok">OK</string>
+    <string name="channel_name">Channel Name</string>
+    <string name="join">Join</string>
+
+    <!-- Button labels -->
+    <string name="open_drawer">Open Drawer</string>
+    <string name="chatTextView">Chat Text View</string>
+    <string name="Chats">Chats</string>
+
+
+</resources>
