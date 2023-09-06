@@ -1,105 +1,149 @@
 package com.example.onlinetrivia;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
+import android.widget.ArrayAdapter;
+import android.widget.Toast;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ChatHelper {
-
-    private IRCClient ircClient;
-
-    // Listener for private messages
-    private OnPrivateMessageReceivedListener privateMessageListener;
-
-    // Listener for channel messages
-    private OnChannelMessageReceivedListener channelMessageListener;
-
-    // Android context to start new activities and perform other Android-specific operations
     private Context context;
-
-
-
-    // Listener for chat list updates
-    public interface OnChatListUpdatedListener {
-        void onChatListUpdated(List<String> chatList);
-    }
-
-    private OnChatListUpdatedListener chatListListener;
-
-    public interface OnPrivateMessageReceivedListener {
-        void onPrivateMessageReceived(String sender, String message);
-    }
+    private IRCClient ircClient;
+    private StringBuilder chatHistory;
+    private ArrayAdapter<String> drawerAdapter;
+    private ArrayAdapter<String> connectedChannelsAdapter;
+    private ArrayAdapter<String> channelListAdapter;
 
     public ChatHelper(Context context) {
         this.context = context;
         this.ircClient = IRCClient.getInstance();
-        initializeListeners();
+        this.chatHistory = new StringBuilder();
     }
 
-    private void initializeListeners() {
-        // Listener for channel messages
-        ircClient.setMessageListener((channel, sender, message) -> {
-            // Handle channel messages here
-            // Since it's no longer handling private messages, this may be empty unless you want additional behavior
-        });
+    public void handleChatSelection(String selectedChat) {
+        if (isChannel(selectedChat)) {
+            switchToChannelActivity(selectedChat);
+        } else {
+            loadChatHistory(selectedChat);
+        }
+    }
 
-        // Listener for private messages
-        ircClient.setPrivateMessageListener((sender, message) -> {
-            if (privateMessageListener != null) {
-                privateMessageListener.onPrivateMessageReceived(sender, message);
+    private boolean isChannel(String chatName) {
+        return chatName.startsWith("#");
+    }
+
+    private void switchToChannelActivity(String channelName) {
+        Intent intent = new Intent(context, ChannelActivity.class);
+        intent.putExtra("channel_name", channelName);
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        context.startActivity(intent);
+    }
+
+    public void loadChatHistory(String chatName) {
+        chatHistory = new StringBuilder();
+        List<String> messages = ircClient.getChatHistory(chatName);
+        for (String message : messages) {
+            chatHistory.append(message).append("\n");
+        }
+    }
+
+    public String stripPrefixes(String name) {
+        if (name.startsWith("@")) {
+            return name.substring(1);
+        }
+        return name;
+    }
+
+    public void updateNamesList(List<String> names) {
+        Collections.sort(names, (o1, o2) -> {
+            if (o1.startsWith("@") && !o2.startsWith("@")) {
+                return -1;
+            } else if (!o1.startsWith("@") && o2.startsWith("@")) {
+                return 1;
             }
+            return o1.compareToIgnoreCase(o2);
         });
-
-        // Listener for chat list updates
-        ircClient.setChatListUpdatedListener(chatList -> {
-            Log.d("ChatHelper", "Chat list update detected.");
-            if (chatListListener != null) {
-                chatListListener.onChatListUpdated(chatList);
-                Log.d("ChatHelper", "chatListListener is null.");
-            }
-        });
-    }
-
-    public void setPrivateMessageListener(OnPrivateMessageReceivedListener listener) {
-        this.privateMessageListener = listener;
-    }
-
-    public void setChatListUpdatedListener(OnChatListUpdatedListener listener) {
-        this.chatListListener = listener;
-
-    }
-
-    public void sendMessage(String recipient, String message) {
-        Log.d("ChatHelper", "Sending message to: " + recipient + ", Message: " + message);
-        ircClient.sendMessageToChannel(recipient, message); // Using the same method for channel and private messages
-    }
-
-    public interface OnChannelMessageReceivedListener {
-        void onChannelMessageReceived(String channel, String sender, String message);
-    }
-
-    private void initializeChannelMessageListener() {
-        ircClient.setChannelMessageListener((channel, sender, message) -> {
-            if (channelMessageListener != null) {
-                channelMessageListener.onChannelMessageReceived(channel, sender, message);
-            }
-        });
-    }
-
-    public void setChannelMessageListener(OnChannelMessageReceivedListener listener) {
-        this.channelMessageListener = listener;
-    }
-
-    public void sendChannelMessage(String channel, String message) {
-        Log.d("ChatHelper", "Sending channel message to: " + channel + ", Message: " + message);
-        ircClient.sendMessageToChannel(channel, message);
     }
 
     public void startPrivateChat(String targetUser) {
-        Log.d("ChatHelper", "Starting private chat with: " + targetUser);
         Intent chatIntent = new Intent(context, ChatActivity.class);
         chatIntent.putExtra("chatTarget", targetUser);
         context.startActivity(chatIntent);
     }
+
+    public void handleSendMessage(String message, ChatType currentChatType, String currentChatName) {
+        if (!message.isEmpty()) {
+            if (currentChatType == ChatType.PRIVATE) {
+                // Logic for private message
+            } else {
+                ircClient.sendMessage(currentChatName, message);
+            }
+        }
+    }
+
+    public void setupListeners() {
+        // Setting up listeners for messages, names, and private messages
+    }
+
+    public void refreshDrawerList() {
+        List<String> combinedList = new ArrayList<>();
+        combinedList.addAll(ircClient.getChannels());
+        combinedList.addAll(ircClient.getPrivateChats());
+        drawerAdapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, combinedList);
+    }
+
+    public void updateConnectedChannelsList() {
+        connectedChannelsAdapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, ircClient.getChannels());
+    }
+
+    public void switchToChannel(String channelName, ChatType currentChatType) {
+        currentChatName = channelName;
+        currentChatType = ChatType.CHANNEL;
+        loadChatHistory(channelName);
+    }
+
+    public void updateChannelList() {
+        channelListAdapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, ircClient.getChannels());
+    }
+
+    public void onNewMessageReceived(String message) {
+        chatHistory.append(message);
+    }
+    public void displayChatHistory() {
+        chatHistory = new StringBuilder();
+        List<String> messages = ircClient.getChatHistory(currentChatName);
+        for (String message : messages) {
+            chatHistory.append(message).append("\n");
+        }
+    }
+
+    public void onBackPressed(long backPressedTime) {
+        if (backPressedTime + 2000 > System.currentTimeMillis()) {
+            ((Activity) context).onBackPressed();
+        }
+    }
+
+    public void createAndShowToast(String message) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+    }
+
+    public void onDestroy() {
+        if (ircClient != null) {
+            ircClient.removeMessageListener(messageListener);
+            ircClient.removeNamesListener(namesListener);
+        }
+    }
+
+    public void appendIrcMessage(String message) {
+        chatHistory.append(message);
+    }
+
+    public void setupDrawerListeners() {
+        // Logic for setting up listeners for drawer open, close, and message receive
+    }
+
+
 }
