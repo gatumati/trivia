@@ -2,14 +2,14 @@ package com.example.onlinetrivia;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Looper;
+import android.text.Spannable;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.os.Handler;
-import android.os.Looper;
-
 
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -17,6 +17,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 
 public class ChatHelper {
 
@@ -158,13 +159,21 @@ public class ChatHelper {
     }
 
     private void appendIrcMessage(String fullMessage) {
-        // Logic to append IRC message
-        chatHistory.add(fullMessage);
+        Spannable coloredMessage = MircColors.toSpannable(fullMessage);
+        chatHistory.add(coloredMessage.toString()); // Store the plain text for history
         Log.d("ChatHelper", "Appended message to chatHistory: " + fullMessage);
         new Handler(Looper.getMainLooper()).post(() -> {
-            chatTextView.append(fullMessage + "\n");
+            chatTextView.append(coloredMessage);
+            chatTextView.append("\n");
         });
     }
+
+    public String updateChatDisplay(String message) {
+        // Convert MircColors to Android Spannable
+        Spannable spannable = MircColors.toSpannable(message);
+        return spannable.toString();
+    }
+
 
     public void switchToChannel(String newChannel) {
         channelName = newChannel;
@@ -233,10 +242,13 @@ public class ChatHelper {
 
     public void displayChatHistory(TextView chatTextView) {
         chatTextView.setText(""); // Clear the TextView
-        for (String message : chatHistory) {
-            chatTextView.append(message + "\n");
+        for (String rawMessage : chatHistory) {
+            Spannable coloredMessage = MircColors.toSpannable(rawMessage);
+            chatTextView.append(coloredMessage);
+            chatTextView.append("\n");
         }
     }
+
 
     public void onDestroy() {
         if (ircClient != null) {
