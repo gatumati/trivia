@@ -69,7 +69,6 @@ public class ChannelActivity extends Activity {
         chatHelper.setChatTextView(chatTextView);
         chatHelper.setNamesListView(namesListView);
         chatHelper.setChatsListView(chatsListView);
-        chatHelper.setDrawerLayout(drawerLayout);
         chatHelper.setDrawerButtons(btnOpenRightDrawer, btnOpenLeftDrawer);
 
         // Set listeners
@@ -82,12 +81,9 @@ public class ChannelActivity extends Activity {
             Log.e("ChannelActivity", "chatsListView is null!");
         }
 
-        if (namesListView != null) {
-            namesListView.setOnItemClickListener((parent, view, position, id) -> {
-                String selectedName = (String) parent.getItemAtPosition(position);
-                chatHelper.handleNamesItemClick(selectedName);
-            });
-        }
+        DrawerRight drawerRight = new DrawerRight(this, namesListView, btnOpenRightDrawer, drawerLayout);
+
+
 
         sendMessageButton.setOnClickListener(view -> {
             String message = messageEditText.getText().toString();
@@ -129,4 +125,12 @@ public class ChannelActivity extends Activity {
         exitToast = Toast.makeText(ChannelActivity.this, message, Toast.LENGTH_SHORT);
         exitToast.show();
     }
+
+    public String getChannelName() {
+        return channelName;
+    }
+
+
+
+
 }

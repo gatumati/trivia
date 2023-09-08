@@ -125,6 +125,10 @@ public class IRCClient implements Runnable {
         }).start();
     }
 
+    public void requestNamesForChannel(String channel) {
+        sendRawCommand("NAMES " + channel);
+    }
+
 
     public void partChannel (String channel){
         new Thread(() -> {
