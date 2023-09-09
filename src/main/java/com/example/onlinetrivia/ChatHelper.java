@@ -181,27 +181,11 @@ public class ChatHelper {
         chatHistory.addAll(oldMessages);
     }
 
-    public void updateChannelList() {
-        channels = ircClient.getCurrentChatList();
-    }
 
     public void setChannelName(String channelName) {
         this.channelName = channelName;
     }
 
-    public void updateNamesList(List<String> names, ListView namesListView) {
-        Collections.sort(names, (o1, o2) -> {
-            if (o1.startsWith("@") && !o2.startsWith("@")) {
-                return -1;
-            } else if (!o1.startsWith("@") && o2.startsWith("@")) {
-                return 1;
-            }
-            return o1.compareToIgnoreCase(o2);
-        });
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, names);
-        namesListView.setAdapter(adapter);
-    }
     public void refreshDrawerList(ListView chatsListView) {
         Collections.sort(channels);
 

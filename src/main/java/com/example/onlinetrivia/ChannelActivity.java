@@ -24,6 +24,7 @@ public class ChannelActivity extends Activity {
     private DrawerLayout drawerLayout;
     private String channelName;
     private Toast exitToast;
+    private DrawerLeft drawerLeft;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +83,7 @@ public class ChannelActivity extends Activity {
         }
 
         DrawerRight drawerRight = new DrawerRight(this, namesListView, btnOpenRightDrawer, drawerLayout);
+        drawerLeft = new DrawerLeft(this, chatsListView, btnOpenLeftDrawer, drawerLayout);
 
 
 

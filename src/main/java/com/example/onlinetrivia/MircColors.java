@@ -35,7 +35,7 @@ public class MircColors {
 
 
 
-    private static final Pattern COLOR_PATTERN = Pattern.compile("(\\d{1,2})|");
+    private static final Pattern COLOR_PATTERN = Pattern.compile("(\\d{1,2})");
 
 
 
