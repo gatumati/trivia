@@ -2,18 +2,17 @@ package com.example.onlinetrivia;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
 import android.os.Looper;
 import android.text.Spannable;
 import android.util.Log;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.os.Handler;
 
+import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
-
-import com.example.onlinetrivia.models.ChatMessage;
-import com.example.onlinetrivia.models.DatabaseInitializer;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,7 +28,6 @@ public class ChatHelper {
     private String channelName;
     private TextView chatTextView;
     private ListView namesListView, chatsListView;
-    private OnChatHistoryUpdatedListener chatHistoryListener;
 
     private DrawerLayout drawerLayout;
     private Button btnOpenRightDrawer, btnOpenLeftDrawer;
@@ -41,14 +39,6 @@ public class ChatHelper {
 
     public interface OnPrivateMessageReceivedListener {
         void onPrivateMessageReceived(String sender, String message);
-    }
-
-    public interface OnChatHistoryUpdatedListener {
-        void onChatHistoryUpdated(String updatedHistory);
-    }
-
-    public void setChatHistoryUpdatedListener(OnChatHistoryUpdatedListener listener) {
-        this.chatHistoryListener = listener;
     }
 
     public interface OnChannelMessageReceivedListener {
@@ -63,6 +53,39 @@ public class ChatHelper {
         this.context = context;
         this.ircClient = IRCClient.getInstance();
         initializeListeners();
+    }
+
+    public void setDrawerLayout(DrawerLayout drawerLayout) {
+        this.drawerLayout = drawerLayout;
+    }
+
+    public void setDrawerButtons(Button btnOpenRightDrawer, Button btnOpenLeftDrawer) {
+        this.btnOpenRightDrawer = btnOpenRightDrawer;
+        this.btnOpenLeftDrawer = btnOpenLeftDrawer;
+
+        // Set onClick listeners for the buttons
+        btnOpenRightDrawer.setOnClickListener(view -> drawerLayout.openDrawer(GravityCompat.END));
+        btnOpenLeftDrawer.setOnClickListener(view -> drawerLayout.openDrawer(GravityCompat.START));
+    }
+
+    public void handleNamesItemClick(String selectedName) {
+        // Logic for handling item click in the names list (right drawer)
+        startPrivateChat(selectedName);
+        drawerLayout.closeDrawers();
+    }
+
+    public void handleChatsItemClick(String selectedItem) {
+        // Logic for handling item click in the chats list (left drawer)
+        if (privateChats.contains(selectedItem)) {
+            // Start private chat activity
+            Intent chatIntent = new Intent(context, ChatActivity.class);
+            chatIntent.putExtra("chatTarget", selectedItem);
+            context.startActivity(chatIntent);
+        } else {
+            // Switch to the selected channel
+            switchToChannel(selectedItem);
+        }
+        drawerLayout.closeDrawers();
     }
 
     private void initializeListeners() {
@@ -90,6 +113,7 @@ public class ChatHelper {
             }
         });
     }
+
 
     public void setPrivateMessageListener(OnPrivateMessageReceivedListener listener) {
         this.privateMessageListener = listener;
@@ -142,76 +166,77 @@ public class ChatHelper {
         });
     }
 
-    public void displayChatHistory() {
-        new Handler(Looper.getMainLooper()).post(() -> {
-            for (String message : chatHistory) {
-                chatTextView.append(message + "\n");
-            }
-        });
+    public String updateChatDisplay(String message) {
+        // Convert MircColors to Android Spannable
+        Spannable spannable = MircColors.toSpannable(message);
+        return spannable.toString();
     }
 
-    public void setDrawerLayout(DrawerLayout drawerLayout) {
-        this.drawerLayout = drawerLayout;
-    }
-
-    public void setBtnOpenRightDrawer(Button btnOpenRightDrawer) {
-        this.btnOpenRightDrawer = btnOpenRightDrawer;
-    }
-
-    public void setBtnOpenLeftDrawer(Button btnOpenLeftDrawer) {
-        this.btnOpenLeftDrawer = btnOpenLeftDrawer;
+    public void switchToChannel(String newChannel) {
+        channelName = newChannel;
+        List<String> oldMessages = GlobalMessageListener.getInstance().getMessagesFor(newChannel);
+        chatHistory.addAll(oldMessages);
     }
 
     public void setChannelName(String channelName) {
         this.channelName = channelName;
     }
 
-    public void updateChatHistory(String chatName, String newMessageContent) {
-        StringBuilder history = chatHistories.getOrDefault(chatName, new StringBuilder());
-        history.append("\n").append(newMessageContent);
-        chatHistories.put(chatName, history);
+    public void refreshDrawerList(ListView chatsListView) {
+        Collections.sort(channels);
 
-        String sender;
-        if (newMessageContent.startsWith(ircClient.getNickname() + ": ")) {
-            sender = ircClient.getNickname();
-        } else {
-            sender = newMessageContent.split(":")[0];
-        }
+        // Combine channels and private chats
+        List<String> combinedList = new ArrayList<>();
+        combinedList.addAll(channels);
+        combinedList.addAll(privateChats);
 
-        new Thread(() -> {
-            ChatMessage newMessage = new ChatMessage(chatName, sender, newMessageContent.replace(sender + ": ", ""), System.currentTimeMillis());
-            DatabaseInitializer.getInstance(context)
-                    .chatMessageDao().insert(newMessage);
-        }).start();
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, combinedList);
+        chatsListView.setAdapter(adapter);
+    }
 
-        if (chatHistoryListener != null) {
-            chatHistoryListener.onChatHistoryUpdated(history.toString());
+    public void handleSendMessage(String channel, String message) {
+        if (!message.isEmpty() && ircClient != null && channel != null) {
+            ircClient.sendMessageToChannel(channel, message);
+            String currentNickname = ircClient.getNickname();
+            appendIrcMessage(currentNickname + ": " + message);
         }
     }
 
-    public void loadChatHistory(String chatName) {
-        new Thread(() -> {
-            List<ChatMessage> messages = DatabaseInitializer.getInstance(context)
-                    .chatMessageDao().getMessagesForChat(chatName);
-
-            Collections.reverse(messages);
-
-            StringBuilder history = new StringBuilder();
-            for (ChatMessage message : messages) {
-                String formattedMessage = message.getSender() + ": " + message.getMessageContent();
-                history.append(formattedMessage).append("\n");
+    public void setupDrawerListeners(ListView chatsListView, ListView namesListView, String selectedUser) {
+        chatsListView.setOnItemClickListener((parent, view, position, id) -> {
+            String selectedItem = (String) parent.getItemAtPosition(position);
+            if (privateChats.contains(selectedItem)) {
+                Intent chatIntent = new Intent(context, ChatActivity.class);
+                chatIntent.putExtra("chatTarget", selectedItem);
+                context.startActivity(chatIntent);
+            } else {
+                switchToChannel(selectedItem);
             }
+        });
 
-            chatHistories.put(chatName, history);
-            String finalHistoryContent = history.toString();
+        namesListView.setOnItemClickListener((parent, view, position, id) -> {
+            String selectedName = (String) parent.getItemAtPosition(position);
+            startPrivateChat(selectedName);
+        });
+    }
 
-            if (chatHistoryListener != null) {
-                chatHistoryListener.onChatHistoryUpdated(finalHistoryContent);
-            }
-        }).start();
-
-        public String stripPrefixes (String name){
-            return name.replaceAll("^[@+]", "");
+    public void displayChatHistory(TextView chatTextView) {
+        chatTextView.setText(""); // Clear the TextView
+        for (String rawMessage : chatHistory) {
+            Spannable coloredMessage = MircColors.toSpannable(rawMessage);
+            chatTextView.append(coloredMessage);
+            chatTextView.append("\n");
         }
+    }
+
+    public void onDestroy() {
+        if (ircClient != null) {
+            ircClient.setMessageListener(null);
+            ircClient.setNamesListener(null);
+        }
+    }
+
+    public String stripPrefixes(String name) {
+        return name.replaceAll("^[@+]", "");
     }
 }
