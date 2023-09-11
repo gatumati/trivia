@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+
 public class ChatHelper {
 
     private IRCClient ircClient;
@@ -31,6 +32,7 @@ public class ChatHelper {
 
     private DrawerLayout drawerLayout;
     private Button btnOpenRightDrawer, btnOpenLeftDrawer;
+
 
     // Listener interfaces
     private OnPrivateMessageReceivedListener privateMessageListener;
@@ -70,6 +72,7 @@ public class ChatHelper {
 
     public void handleNamesItemClick(String selectedName) {
         // Logic for handling item click in the names list (right drawer)
+        // For now, it initiates a private chat
         startPrivateChat(selectedName);
         drawerLayout.closeDrawers();
     }
@@ -113,7 +116,6 @@ public class ChatHelper {
             }
         });
     }
-
 
     public void setPrivateMessageListener(OnPrivateMessageReceivedListener listener) {
         this.privateMessageListener = listener;
@@ -172,11 +174,13 @@ public class ChatHelper {
         return spannable.toString();
     }
 
+
     public void switchToChannel(String newChannel) {
         channelName = newChannel;
         List<String> oldMessages = GlobalMessageListener.getInstance().getMessagesFor(newChannel);
         chatHistory.addAll(oldMessages);
     }
+
 
     public void setChannelName(String channelName) {
         this.channelName = channelName;
@@ -229,14 +233,11 @@ public class ChatHelper {
         }
     }
 
+
     public void onDestroy() {
         if (ircClient != null) {
             ircClient.setMessageListener(null);
             ircClient.setNamesListener(null);
         }
-    }
-
-    public String stripPrefixes(String name) {
-        return name.replaceAll("^[@+]", "");
     }
 }
