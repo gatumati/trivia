@@ -46,6 +46,7 @@ public class ChannelActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        chatHelper.initializeListeners();
         chatHelper.displayChatHistory(chatTextView);
     }
 
@@ -82,7 +83,8 @@ public class ChannelActivity extends Activity {
             Log.e("ChannelActivity", "chatsListView is null!");
         }
 
-        DrawerRight drawerRight = new DrawerRight(this, namesListView, btnOpenRightDrawer, drawerLayout);
+        DrawerRight drawerRight = new DrawerRight(this, namesListView, btnOpenRightDrawer, drawerLayout, chatHelper);
+
         drawerLeft = new DrawerLeft(this, chatsListView, btnOpenLeftDrawer, drawerLayout);
 
 

@@ -1,36 +1,48 @@
 package com.example.onlinetrivia;
 
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 public class GlobalMessageListener {
+    private static final GlobalMessageListener instance = new GlobalMessageListener();
 
-    private static GlobalMessageListener instance;
-
-    // To store the latest messages for each channel or user.
-    private Map<String, List<String>> messageLogs = new HashMap<>();
+    private final List<String> messages = new ArrayList<>();
+    private final List<String> privateMessages = new ArrayList<>();
+    private final List<String> namesList = new ArrayList<>();
 
     private GlobalMessageListener() {
     }
 
     public static GlobalMessageListener getInstance() {
-        if (instance == null) {
-            instance = new GlobalMessageListener();
-        }
         return instance;
     }
 
-    public void addMessage(String channelOrUser, String message) {
-        if (!messageLogs.containsKey(channelOrUser)) {
-            messageLogs.put(channelOrUser, new LinkedList<>());
-        }
-        messageLogs.get(channelOrUser).add(message);
+    public synchronized void addMessage(String channel, String message) {
+        messages.add(channel + ": " + message);
     }
 
-    public List<String> getMessagesFor(String channelOrUser) {
-        return messageLogs.getOrDefault(channelOrUser, new LinkedList<>());
+    public synchronized void addPrivateMessage(String sender, String recipient, String message) {
+        privateMessages.add(sender + "->" + recipient + ": " + message);
     }
 
+    public synchronized List<String> getMessagesFor(String channel) {
+        return messages.stream().filter(msg -> msg.startsWith(channel + ":")).collect(Collectors.toList());
+    }
+
+    public synchronized List<String> getPrivateMessagesFor(String recipient) {
+        return privateMessages.stream().filter(msg -> msg.contains("->" + recipient + ":")).collect(Collectors.toList());
+    }
+
+    public synchronized void addUserToNamesList(String name) {
+        namesList.add(name);
+    }
+
+    public synchronized void removeUserFromNamesList(String name) {
+        namesList.remove(name);
+    }
+
+    public synchronized List<String> getNamesList() {
+        return new ArrayList<>(namesList);
+    }
 }

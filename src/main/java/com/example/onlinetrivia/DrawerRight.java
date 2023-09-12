@@ -30,16 +30,20 @@ public class DrawerRight {
     private DrawerLayout drawerLayout;
     private List<String> currentNames = new ArrayList<>();
 
+    private ChatHelper chatHelper;
 
 
 
-    public DrawerRight(ChannelActivity activity, ListView namesListView, Button btnOpenRightDrawer, DrawerLayout drawerLayout) {
+
+    public DrawerRight(ChannelActivity activity, ListView namesListView, Button btnOpenRightDrawer, DrawerLayout drawerLayout, ChatHelper chatHelper) {
         this.activity = activity;
         this.context = activity.getApplicationContext();
         this.namesListView = namesListView;
         this.btnOpenRightDrawer = btnOpenRightDrawer;
         this.drawerLayout = drawerLayout;
         this.ircClient = IRCClient.getInstance();
+        this.chatHelper = chatHelper;
+        setupNamesListViewClickListener();
         initializeListeners();
         setupDrawerButton();
     }
@@ -48,6 +52,19 @@ public class DrawerRight {
         Log.d("DrawerRight", "Initializing listeners");
         ircClient.setNamesListener(this::updateNamesList);
     }
+
+    private void setupNamesListViewClickListener() {
+        namesListView.setOnItemClickListener((parent, view, position, id) -> {
+            String selectedName = (String) parent.getItemAtPosition(position);
+            selectedName = stripPrefixes(selectedName); // Strip prefixes from the name
+            chatHelper.handleNamesItemClick(selectedName);
+        });
+    }
+
+    private String stripPrefixes(String name) {
+        return name.replaceAll("^[@+]", "");
+    }
+
 
     private void setupDrawerButton() {
         btnOpenRightDrawer.setOnClickListener(view -> {
