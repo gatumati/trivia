@@ -14,8 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DrawerLeft {
-
-
     private Activity activity;
     private Context context;
     private ListView chatsListView;
@@ -23,8 +21,6 @@ public class DrawerLeft {
     private DrawerLayout drawerLayout;
     private IRCClient ircClient;
     private List<String> connectedChannels = new ArrayList<>();
-    private List<String> channels = new ArrayList<>();
-    private List<String> privateChats = new ArrayList<>();
 
     public DrawerLeft(Activity activity, ListView chatsListView, Button btnOpenLeftDrawer, DrawerLayout drawerLayout) {
         this.activity = activity;
@@ -35,7 +31,6 @@ public class DrawerLeft {
         this.ircClient = IRCClient.getInstance();
         initializeListeners();
     }
-
 
     private void initializeListeners() {
         btnOpenLeftDrawer.setOnClickListener(view -> drawerLayout.openDrawer(GravityCompat.START));
@@ -56,10 +51,10 @@ public class DrawerLeft {
         });
     }
 
-
-
     public void updateConnectedChannelsList() {
-        connectedChannels = ircClient.getCurrentChatList(); // Fetch the list from ircClient
+        connectedChannels = ircClient.getCurrentChatList(); // Fetch the list of channels
+        List<String> privateChats = GlobalMessageListener.getInstance().getPrivateChats(); // Fetch the list of private chats
+        connectedChannels.addAll(privateChats); // Combine both lists
         activity.runOnUiThread(() -> {
             ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, connectedChannels);
             chatsListView.setAdapter(adapter);
