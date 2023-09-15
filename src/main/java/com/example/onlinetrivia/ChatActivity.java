@@ -4,15 +4,21 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 
 public class ChatActivity extends AppCompatActivity {
 
     private TextView chatTextView;
     private EditText messageEditText;
-    private Button sendMessageButton;
+    private Button sendMessageButton, btnOpenLeftDrawer;
     private ChatHelper chatHelper;
+    private DrawerLeft drawerLeft;
+    private ListView chatsListView;
+    private DrawerLayout drawerLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,12 +30,23 @@ public class ChatActivity extends AppCompatActivity {
         messageEditText = findViewById(R.id.messageEditText);
         sendMessageButton = findViewById(R.id.sendMessageButton);
 
+        // Initialize Drawer components
+        drawerLayout = findViewById(R.id.drawer_layout);
+        btnOpenLeftDrawer = findViewById(R.id.btnOpenLeftDrawer);
+        chatsListView = findViewById(R.id.chatsListView);
+
         // Initialize ChatHelper
         chatHelper = new ChatHelper(this);
         chatHelper.setChatTextView(chatTextView);
 
+        // Initialize DrawerLeft
+        drawerLeft = new DrawerLeft(this, chatsListView, btnOpenLeftDrawer, drawerLayout);
+
         // Set up listeners for private messages
         setupPrivateMessageListeners();
+
+        // Set OnClick Listener for Drawer Button
+        btnOpenLeftDrawer.setOnClickListener(view -> drawerLayout.openDrawer(GravityCompat.START));
     }
 
     private void setupPrivateMessageListeners() {

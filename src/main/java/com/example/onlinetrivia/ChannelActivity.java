@@ -31,6 +31,8 @@ public class ChannelActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_channel);
 
+
+
         chatHelper = new ChatHelper(this);
 
         if (getIntent().hasExtra("channel_name")) {

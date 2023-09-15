@@ -108,6 +108,7 @@ public class ChatHelper {
         ircClient.setPrivateMessageListener((sender, message) -> {
             if (privateMessageListener != null) {
                 privateMessageListener.onPrivateMessageReceived(sender, message);
+                GlobalMessageListener.getInstance().addPrivateChat(sender);
             }
         });
 

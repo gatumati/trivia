@@ -1,5 +1,6 @@
 package com.example.onlinetrivia;
 
+import android.app.Activity;
 import android.content.Context;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -14,7 +15,8 @@ import java.util.List;
 
 public class DrawerLeft {
 
-    private ChannelActivity activity;
+
+    private Activity activity;
     private Context context;
     private ListView chatsListView;
     private Button btnOpenLeftDrawer;
@@ -24,7 +26,7 @@ public class DrawerLeft {
     private List<String> channels = new ArrayList<>();
     private List<String> privateChats = new ArrayList<>();
 
-    public DrawerLeft(ChannelActivity activity, ListView chatsListView, Button btnOpenLeftDrawer, DrawerLayout drawerLayout) {
+    public DrawerLeft(Activity activity, ListView chatsListView, Button btnOpenLeftDrawer, DrawerLayout drawerLayout) {
         this.activity = activity;
         this.context = activity.getApplicationContext();
         this.chatsListView = chatsListView;
@@ -33,6 +35,7 @@ public class DrawerLeft {
         this.ircClient = IRCClient.getInstance();
         initializeListeners();
     }
+
 
     private void initializeListeners() {
         btnOpenLeftDrawer.setOnClickListener(view -> drawerLayout.openDrawer(GravityCompat.START));
@@ -52,6 +55,8 @@ public class DrawerLeft {
             }
         });
     }
+
+
 
     public void updateConnectedChannelsList() {
         connectedChannels = ircClient.getCurrentChatList(); // Fetch the list from ircClient
