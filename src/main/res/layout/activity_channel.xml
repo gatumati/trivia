@@ -44,7 +44,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:hint="@string/enter_message"
-                android:imeOptions="actionSend"
+                android:imeOptions="actionSend|flagNoExtractUi"
                 android:maxLines="1" />
 
             <Button
