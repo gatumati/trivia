@@ -6,10 +6,9 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
 
 
 public class IRCClient implements Runnable {
@@ -190,7 +189,9 @@ public class IRCClient implements Runnable {
 
                 if (!privateChats.contains(sender) && !joinedChannels.contains(sender)) {
                     privateChats.add(sender);
-                    updateChatList(getCurrentChatList());
+
+
+
                 }
             }
         }
@@ -200,6 +201,7 @@ public class IRCClient implements Runnable {
         // Do what you want with private messages here. For instance:
         if (privateMessageListener != null) {
             privateMessageListener.onPrivateMessageReceived(sender, message);
+            GlobalMessageListener.getInstance().addPrivateChat(sender);
         }
     }
 
@@ -267,8 +269,6 @@ public class IRCClient implements Runnable {
     public List<String> getCurrentChatList() {
         List<String> combinedList = new ArrayList<>();
         combinedList.addAll(joinedChannels);
-        combinedList.addAll(privateChats);
-        Collections.sort(combinedList);
         return combinedList;
     }
 }

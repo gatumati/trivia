@@ -12,6 +12,7 @@ public class GlobalMessageListener {
     private final List<String> namesList = new ArrayList<>();
     private final List<String> privateChats = new ArrayList<>();
     private final List<String> channels = new ArrayList<>();
+    private final List<Runnable> privateMessageListeners = new ArrayList<>();
 
     private GlobalMessageListener() {
     }
@@ -26,6 +27,10 @@ public class GlobalMessageListener {
 
     public synchronized void addPrivateMessage(String sender, String recipient, String message) {
         privateMessages.add(sender + "->" + recipient + ": " + message);
+        // Notify all listeners
+        for (Runnable listener : privateMessageListeners) {
+            listener.run();
+        }
     }
 
     public synchronized List<String> getMessagesFor(String channel) {
@@ -58,15 +63,15 @@ public class GlobalMessageListener {
         return new ArrayList<>(channels);
     }
 
-    public synchronized boolean hasPrivateChat(String name) {
-        return privateChats.contains(name);
-    }
-
-    public synchronized void removeUserFromNamesList(String name) {
-        namesList.remove(name);
-    }
-
     public synchronized List<String> getNamesList() {
         return new ArrayList<>(namesList);
+    }
+
+    public synchronized void addPrivateMessageListener(Runnable listener) {
+        privateMessageListeners.add(listener);
+    }
+
+    public synchronized void removePrivateMessageListener(Runnable listener) {
+        privateMessageListeners.remove(listener);
     }
 }

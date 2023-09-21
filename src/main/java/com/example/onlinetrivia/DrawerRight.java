@@ -15,13 +15,21 @@ import java.util.Collections;
 import java.util.List;
 
 public class DrawerRight {
+    public void refreshNamesList() {
+        ircClient.setNamesListener(this::updateNamesList);
+        new Thread(() -> {
+            ircClient.requestNamesForChannel(activity.getChannelName());
+        }).start();
+    }
     private ChannelActivity activity;
+
     private Context context;
     private ListView namesListView;
     private IRCClient ircClient;
     private Button btnOpenRightDrawer;
     private DrawerLayout drawerLayout;
     private List<String> currentNames = new ArrayList<>();
+
     private ChatHelper chatHelper;
 
     public DrawerRight(ChannelActivity activity, ListView namesListView, Button btnOpenRightDrawer, DrawerLayout drawerLayout, ChatHelper chatHelper) {
@@ -46,13 +54,17 @@ public class DrawerRight {
         namesListView.setOnItemClickListener((parent, view, position, id) -> {
             String selectedName = (String) parent.getItemAtPosition(position);
             selectedName = stripPrefixes(selectedName); // Strip prefixes from the name
-            chatHelper.handleNamesItemClick(selectedName); // Initiate private chat
+
+            // Initiate private chat
+            chatHelper.handleNamesItemClick(selectedName);
+
+            // Add to private chats list in GlobalMessageListener
             if (!GlobalMessageListener.getInstance().isUserInPrivateChats(selectedName)) {
-                GlobalMessageListener.getInstance().addPrivateChat(selectedName); // Add to private chats list only if not already present
+                GlobalMessageListener.getInstance().addPrivateChat(selectedName);
             }
         });
-
     }
+
 
     private String stripPrefixes(String name) {
         return name.replaceAll("^[@+]", "");
@@ -66,20 +78,25 @@ public class DrawerRight {
         Log.d("DrawerRight", "Right drawer opened");
 
         drawerLayout.addDrawerListener(new DrawerLayout.SimpleDrawerListener() {
+
             @Override
             public void onDrawerOpened(View drawerView) {
                 Log.d("DrawerRight", "Drawer opened");
+
                 if (drawerView.findViewById(R.id.namesListView) != null) {
                     btnOpenRightDrawer.setVisibility(View.GONE);
                     namesListView.invalidate();
                     refreshNamesList();
+
                     Log.d("DrawerRight", "Fetching channel name: " + activity.getChannelName());
+
                 }
             }
 
             @Override
             public void onDrawerClosed(View drawerView) {
                 Log.d("DrawerRight", "Drawer closed");
+
                 if (drawerView.findViewById(R.id.namesListView) != null) {
                     btnOpenRightDrawer.setVisibility(View.VISIBLE);
                 }
@@ -87,15 +104,9 @@ public class DrawerRight {
         });
     }
 
-    public void refreshNamesList() {
-        ircClient.setNamesListener(this::updateNamesList);
-        new Thread(() -> {
-            ircClient.requestNamesForChannel(activity.getChannelName());
-        }).start();
-    }
-
     public void updateNamesList(List<String> names) {
         Log.d("DrawerRight", "Updating names list with size: " + names.size());
+
         activity.runOnUiThread(() -> {
             Collections.sort(names, (o1, o2) -> {
                 if (o1.startsWith("@") && !o2.startsWith("@")) {
@@ -105,15 +116,12 @@ public class DrawerRight {
                 }
                 return o1.compareToIgnoreCase(o2);
             });
-            if (!currentNames.equals(names)) {  // Only update if there's a change
-                currentNames.clear();
-                currentNames.addAll(names);
-                ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, names);
-                namesListView.setAdapter(adapter);
-                namesListView.invalidate();
-                Log.d("DrawerRight", "Names list updated and invalidated");
-            }
+            currentNames.addAll(names);  // Add the new names
+            currentNames.clear();  // Clear the current names
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, names);
+            namesListView.setAdapter(adapter);
+            namesListView.invalidate();
+            Log.d("DrawerRight", "Names list updated and invalidated");
         });
     }
-
 }
