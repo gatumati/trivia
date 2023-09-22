@@ -35,12 +35,14 @@ public class ChatActivity extends AppCompatActivity {
         btnOpenLeftDrawer = findViewById(R.id.btnOpenLeftDrawer);
         chatsListView = findViewById(R.id.chatsListView);
 
+
         // Initialize ChatHelper
         chatHelper = new ChatHelper(this);
         chatHelper.setChatTextView(chatTextView);
 
         // Initialize DrawerLeft
-        drawerLeft = new DrawerLeft(this, chatsListView, btnOpenLeftDrawer, drawerLayout);
+        drawerLeft = new DrawerLeft(this, chatsListView, btnOpenLeftDrawer, drawerLayout, chatHelper);
+
 
         // Set up listeners for private messages
         setupPrivateMessageListeners();

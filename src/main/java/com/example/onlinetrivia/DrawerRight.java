@@ -62,8 +62,12 @@ public class DrawerRight {
             if (!GlobalMessageListener.getInstance().isUserInPrivateChats(selectedName)) {
                 GlobalMessageListener.getInstance().addPrivateChat(selectedName);
             }
+
+            // Close the DrawerRight
+            drawerLayout.closeDrawer(GravityCompat.END);
         });
     }
+
 
 
     private String stripPrefixes(String name) {

@@ -20,19 +20,24 @@ public class DrawerLeft {
     private Button btnOpenLeftDrawer;
     private DrawerLayout drawerLayout;
     private IRCClient ircClient;
+    private ChatHelper chatHelper; // Added reference to ChatHelper
     private List<String> connectedChannels = new ArrayList<>();
 
-    public DrawerLeft(Activity activity, ListView chatsListView, Button btnOpenLeftDrawer, DrawerLayout drawerLayout) {
+    public DrawerLeft(Activity activity, ListView chatsListView, Button btnOpenLeftDrawer, DrawerLayout drawerLayout, ChatHelper chatHelper) {
         this.activity = activity;
         this.context = activity.getApplicationContext();
         this.chatsListView = chatsListView;
         this.btnOpenLeftDrawer = btnOpenLeftDrawer;
         this.drawerLayout = drawerLayout;
         this.ircClient = IRCClient.getInstance();
+        this.chatHelper = chatHelper; // Initialize the ChatHelper
         initializeListeners();
 
         // Register as a listener to get notified when a private message is received
         GlobalMessageListener.getInstance().addPrivateMessageListener(this::updateConnectedChannelsList);
+
+        // Set up the click listener for the chatsListView
+        setupChatsListViewClickListener();
     }
 
     private void initializeListeners() {
@@ -70,6 +75,13 @@ public class DrawerLeft {
         activity.runOnUiThread(() -> {
             ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, connectedChannels);
             chatsListView.setAdapter(adapter);
+        });
+    }
+
+    private void setupChatsListViewClickListener() {
+        chatsListView.setOnItemClickListener((parent, view, position, id) -> {
+            String selectedItem = (String) parent.getItemAtPosition(position);
+
         });
     }
 

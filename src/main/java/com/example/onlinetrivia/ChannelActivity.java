@@ -87,7 +87,7 @@ public class ChannelActivity extends Activity {
 
         DrawerRight drawerRight = new DrawerRight(this, namesListView, btnOpenRightDrawer, drawerLayout, chatHelper);
 
-        drawerLeft = new DrawerLeft(this, chatsListView, btnOpenLeftDrawer, drawerLayout);
+        drawerLeft = new DrawerLeft(this, chatsListView, btnOpenLeftDrawer, drawerLayout, chatHelper);
 
 
 

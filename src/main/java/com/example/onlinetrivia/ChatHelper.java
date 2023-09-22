@@ -91,7 +91,6 @@ public class ChatHelper {
         } else {
             switchToChannel(selectedItem);
         }
-        drawerLayout.closeDrawers();
     }
 
     public void initializeListeners() {
@@ -101,6 +100,7 @@ public class ChatHelper {
             if (channel.equals(channelName)) {
                 appendIrcMessage(sender + ": " + message);
                 GlobalMessageListener.getInstance().addMessage(channel, sender + ": " + message);
+
             }
         });
 
@@ -108,7 +108,10 @@ public class ChatHelper {
         ircClient.setPrivateMessageListener((sender, message) -> {
             if (privateMessageListener != null) {
                 privateMessageListener.onPrivateMessageReceived(sender, message);
-                GlobalMessageListener.getInstance().addPrivateChat(sender);
+                if (!GlobalMessageListener.getInstance().isUserInPrivateChats(sender)) {
+                    GlobalMessageListener.getInstance().addPrivateChat(sender);
+
+                }
             }
         });
 
@@ -153,6 +156,7 @@ public class ChatHelper {
 
         ircClient.sendMessageToChannel(recipient, message);
         GlobalMessageListener.getInstance().addPrivateMessage(ircClient.getNickname(), recipient, message);
+        Log.d("ChatHelper", "Sending message to recipient: " + recipient + " with message: " + message);
     }
 
 
@@ -229,6 +233,7 @@ public class ChatHelper {
             ircClient.sendMessageToChannel(channel, message);
             String currentNickname = ircClient.getNickname();
             appendIrcMessage(currentNickname + ": " + message);
+            Log.d("ChatHelper", "Handling send message to channel: " + channel + " with message: " + message);
         }
     }
 
