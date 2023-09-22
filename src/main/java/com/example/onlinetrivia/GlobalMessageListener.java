@@ -23,6 +23,9 @@ public class GlobalMessageListener {
 
     public synchronized void addMessage(String channel, String message) {
         messages.add(channel + ": " + message);
+        // Update the channel's message list in ChatHelper
+        ChatHelper.getInstance().addMessageToChannel(channel, message);
+
     }
 
     public synchronized void addPrivateMessage(String sender, String recipient, String message) {

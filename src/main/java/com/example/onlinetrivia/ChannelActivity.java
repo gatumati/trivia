@@ -13,6 +13,8 @@ import android.widget.Toast;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import java.util.List;
+
 public class ChannelActivity extends Activity {
 
     private boolean doubleBackToExitPressedOnce = false;
@@ -135,6 +137,23 @@ public class ChannelActivity extends Activity {
     public String getChannelName() {
         return channelName;
     }
+
+    public void updateChannelContent(String newChannel, List<String> channelMessages) {
+        // Set the title to the new channel name
+        setTitle(newChannel);
+
+        // Update the channelName variable
+        channelName = newChannel;
+
+        // Append each message from the channelMessages list to the chatTextView
+        // Only if the chatTextView doesn't already contain that message
+        for (String message : channelMessages) {
+            if (!chatTextView.getText().toString().contains(message)) {
+                chatTextView.append(message + "\n");
+            }
+        }
+    }
+
 
 
 

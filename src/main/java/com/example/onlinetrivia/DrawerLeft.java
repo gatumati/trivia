@@ -2,6 +2,7 @@ package com.example.onlinetrivia;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -11,6 +12,7 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class DrawerLeft {
@@ -81,9 +83,31 @@ public class DrawerLeft {
     private void setupChatsListViewClickListener() {
         chatsListView.setOnItemClickListener((parent, view, position, id) -> {
             String selectedItem = (String) parent.getItemAtPosition(position);
+            Log.d("DrawerLeft", "Item clicked: " + selectedItem); // Add this log
 
+            if (selectedItem.startsWith("#")) {  // Channels typically start with '#'
+                // It's a channel, switch to the channel
+                chatHelper.switchToChannel(selectedItem);
+            } else {
+                // It's a private chat user, switch to the user's chat
+                chatHelper.startPrivateChat(selectedItem);
+            }
         });
     }
+
+
+    public void refreshDrawerList() {
+        List<String> channels = GlobalMessageListener.getInstance().getChannels();
+        List<String> privateChats = GlobalMessageListener.getInstance().getPrivateChats();
+
+        Collections.sort(channels);
+        List<String> combinedList = new ArrayList<>();
+        combinedList.addAll(channels);
+        combinedList.addAll(privateChats);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, combinedList);
+        chatsListView.setAdapter(adapter);
+    }
+
 
     // Ensure to unregister the listener when the activity is destroyed to prevent memory leaks
     public void onDestroy() {
