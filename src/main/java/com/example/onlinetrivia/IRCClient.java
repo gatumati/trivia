@@ -30,6 +30,7 @@ public class IRCClient implements Runnable {
 
 
 
+
     public interface OnConnectionEstablishedListener {
         void onConnectionEstablished();
     }

@@ -25,6 +25,9 @@ public class DrawerLeft {
     private ChatHelper chatHelper; // Added reference to ChatHelper
     private List<String> connectedChannels = new ArrayList<>();
 
+    private List<String> combinedList = new ArrayList<>();
+    private List<String> channels = new ArrayList<>();
+
     public DrawerLeft(Activity activity, ListView chatsListView, Button btnOpenLeftDrawer, DrawerLayout drawerLayout, ChatHelper chatHelper) {
         this.activity = activity;
         this.context = activity.getApplicationContext();
@@ -44,9 +47,20 @@ public class DrawerLeft {
 
     private void initializeListeners() {
         btnOpenLeftDrawer.setOnClickListener(view -> {
+
             drawerLayout.openDrawer(GravityCompat.START);
             refreshDrawer();
+
         });
+        GlobalMessageListener.getInstance().setOnChatUpdateListener(() -> {
+            refreshDrawerList();
+        });
+
+        ChatHelper chatHelper = ChatHelper.getInstance();
+        chatHelper.setOnDrawerListRefreshRequestedListener(() -> {
+            refreshDrawerList();
+        });
+
 
         drawerLayout.addDrawerListener(new DrawerLayout.SimpleDrawerListener() {
             @Override
@@ -82,7 +96,7 @@ public class DrawerLeft {
 
     private void setupChatsListViewClickListener() {
         chatsListView.setOnItemClickListener((parent, view, position, id) -> {
-            String selectedItem = (String) parent.getItemAtPosition(position);
+            String selectedItem = combinedList.get(position);
             Log.d("DrawerLeft", "Item clicked: " + selectedItem); // Add this log
 
             if (selectedItem.startsWith("#")) {  // Channels typically start with '#'
@@ -97,8 +111,9 @@ public class DrawerLeft {
 
 
     public void refreshDrawerList() {
-        List<String> channels = GlobalMessageListener.getInstance().getChannels();
-        List<String> privateChats = GlobalMessageListener.getInstance().getPrivateChats();
+        Collections.sort(channels);
+        List<String> channels = ChatHelper.getInstance().getConnectedChannels();
+        List<String> privateChats = ChatHelper.getInstance().getActivePrivateChats();
 
         Collections.sort(channels);
         List<String> combinedList = new ArrayList<>();
@@ -107,6 +122,7 @@ public class DrawerLeft {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, combinedList);
         chatsListView.setAdapter(adapter);
     }
+
 
 
     // Ensure to unregister the listener when the activity is destroyed to prevent memory leaks

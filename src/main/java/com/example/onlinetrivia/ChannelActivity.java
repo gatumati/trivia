@@ -52,6 +52,7 @@ public class ChannelActivity extends Activity {
         super.onResume();
         chatHelper.initializeListeners();
         chatHelper.displayChatHistory(chatTextView);
+        
     }
 
     @Override

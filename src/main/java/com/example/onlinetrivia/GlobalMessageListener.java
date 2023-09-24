@@ -28,6 +28,30 @@ public class GlobalMessageListener {
 
     }
 
+    public interface OnChatUpdateListener {
+        void onChatUpdated();
+    }
+
+    private OnChatUpdateListener chatUpdateListener;
+
+    public void setOnChatUpdateListener(OnChatUpdateListener listener) {
+        this.chatUpdateListener = listener;
+    }
+
+    private void notifyChatUpdated() {
+        if (chatUpdateListener != null) {
+            chatUpdateListener.onChatUpdated();
+        }
+    }
+
+
+    public void addChannel(String channel) {
+        if (!channels.contains(channel)) {
+            channels.add(channel);
+            notifyChatUpdated();
+        }
+    }
+
     public synchronized void addPrivateMessage(String sender, String recipient, String message) {
         privateMessages.add(sender + "->" + recipient + ": " + message);
         // Notify all listeners
@@ -51,6 +75,7 @@ public class GlobalMessageListener {
     public synchronized void addPrivateChat(String username) {
         if (!privateChats.contains(username)) {
             privateChats.add(username);
+            notifyChatUpdated();
         }
     }
 

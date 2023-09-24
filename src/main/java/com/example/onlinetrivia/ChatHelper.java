@@ -2,23 +2,40 @@ package com.example.onlinetrivia;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.Looper;
 import android.text.Spannable;
 import android.util.Log;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.os.Handler;
+
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class ChatHelper {
+
+
+
+    private static ChatHelper instance = new ChatHelper();
+
+    // Private constructor to prevent creating multiple instances
+    private ChatHelper() {
+    }
+
+    // Public method to get the single instance of the class
+    public static ChatHelper getInstance() {
+        if (instance == null) {
+            instance = new ChatHelper();
+        }
+        return instance;
+    }
+
 
     private IRCClient ircClient;
     private Context context;
@@ -39,6 +56,11 @@ public class ChatHelper {
     private OnChannelMessageReceivedListener channelMessageListener;
     private OnChatListUpdatedListener chatListListener;
 
+    private Map<String, List<String>> channelContentMap = new HashMap<>();
+
+    private List<String> connectedChannels = new ArrayList<>();
+    private List<String> activePrivateChats = new ArrayList<>();
+
     public interface OnPrivateMessageReceivedListener {
         void onPrivateMessageReceived(String sender, String message);
     }
@@ -57,6 +79,43 @@ public class ChatHelper {
         initializeListeners();
     }
 
+    // Methods to manipulate the connected channels
+    public void addConnectedChannel(String channel) {
+        if (!connectedChannels.contains(channel)) {
+            connectedChannels.add(channel);
+        }
+    }
+
+    public void removeConnectedChannel(String channel) {
+        connectedChannels.remove(channel);
+    }
+
+    public List<String> getConnectedChannels() {
+        return new ArrayList<>(connectedChannels);
+    }
+
+    // Methods to manipulate the active private chats
+    public void addActivePrivateChat(String user) {
+        if (!activePrivateChats.contains(user)) {
+            activePrivateChats.add(user);
+        }
+    }
+
+    public void removeActivePrivateChat(String user) {
+        activePrivateChats.remove(user);
+    }
+
+    public List<String> getActivePrivateChats() {
+        return new ArrayList<>(activePrivateChats);
+    }
+
+    public void joinChannel(String channel) {
+
+        addConnectedChannel(channel);
+    }
+
+
+
     public void setDrawerLayout(DrawerLayout drawerLayout) {
         this.drawerLayout = drawerLayout;
     }
@@ -74,6 +133,17 @@ public class ChatHelper {
     private String stripPrefixes(String name) {
         return name.replaceAll("^[@+]", "");
     }
+
+    public interface OnDrawerListRefreshRequestedListener {
+        void onRefreshRequested();
+    }
+
+    private OnDrawerListRefreshRequestedListener drawerListRefreshListener;
+
+    public void setOnDrawerListRefreshRequestedListener(OnDrawerListRefreshRequestedListener listener) {
+        this.drawerListRefreshListener = listener;
+    }
+
 
 
     public void handleNamesItemClick(String selectedName) {
@@ -111,6 +181,11 @@ public class ChatHelper {
                 if (!GlobalMessageListener.getInstance().isUserInPrivateChats(sender)) {
                     GlobalMessageListener.getInstance().addPrivateChat(sender);
 
+                    if (drawerListRefreshListener != null) {
+                        drawerListRefreshListener.onRefreshRequested();
+                    }
+
+
                 }
             }
         });
@@ -125,6 +200,10 @@ public class ChatHelper {
 
         ircClient.setPrivateMessageListener((sender, message) -> {
             GlobalMessageListener.getInstance().addPrivateMessage(sender, ircClient.getNickname(), message);
+            if (drawerListRefreshListener != null) {
+                drawerListRefreshListener.onRefreshRequested();
+            }
+
             if (privateMessageListener != null) {
                 new Handler(Looper.getMainLooper()).post(() -> {
                     privateMessageListener.onPrivateMessageReceived(sender, message);
@@ -177,11 +256,21 @@ public class ChatHelper {
         this.chatsListView = chatsListView;
     }
 
+    public boolean isActiveChannel(String channel) {
+        return connectedChannels.contains(channel);
+    }
+
+    public boolean isActivePrivateChat(String user) {
+        return activePrivateChats.contains(user);
+    }
+
+
     public void startPrivateChat(String targetUser) {
         Log.d("ChatHelper", "Starting private chat with: " + targetUser);
         Intent chatIntent = new Intent(context, ChatActivity.class);
         chatIntent.putExtra("chatTarget", targetUser);
         context.startActivity(chatIntent);
+        addActivePrivateChat(targetUser);
     }
 
     private void appendIrcMessage(String fullMessage) {
@@ -210,23 +299,30 @@ public class ChatHelper {
 
 
     public void switchToChannel(String newChannel) {
-        channelName = newChannel;
-        List<String> oldMessages = GlobalMessageListener.getInstance().getMessagesFor(newChannel);
-        chatHistory.addAll(oldMessages);
+        if (context instanceof ChannelActivity) {
+            // If already in ChannelActivity, update the current activity
+            ChannelActivity currentActivity = (ChannelActivity) context;
+            List<String> channelMessages = channelContentMap.getOrDefault(newChannel, new ArrayList<>());
+            currentActivity.updateChannelContent(newChannel, channelMessages);
+        } else {
+            // If not in ChannelActivity, start the ChannelActivity
+            Intent channelIntent = new Intent(context, ChannelActivity.class);
+            channelIntent.putExtra("CHANNEL_NAME", newChannel);
+            context.startActivity(channelIntent);
+        }
     }
+
+    public void addMessageToChannel(String channel, String message) {
+        List<String> channelMessages = channelContentMap.getOrDefault(channel, new ArrayList<>());
+        channelMessages.add(message);
+        channelContentMap.put(channel, channelMessages);
+    }
+
 
     public void setChannelName(String channelName) {
         this.channelName = channelName;
     }
 
-    public void refreshDrawerList(ListView chatsListView) {
-        Collections.sort(channels);
-        List<String> combinedList = new ArrayList<>();
-        combinedList.addAll(channels);
-        combinedList.addAll(privateChats);
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, combinedList);
-        chatsListView.setAdapter(adapter);
-    }
 
     public void handleSendMessage(String channel, String message) {
         if (!message.isEmpty() && ircClient != null && channel != null) {
