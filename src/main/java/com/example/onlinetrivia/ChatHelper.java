@@ -277,11 +277,16 @@ public class ChatHelper {
         Spannable coloredMessage = MircColors.toSpannable(fullMessage);
         chatHistory.add(coloredMessage.toString());
         Log.d("ChatHelper", "Appended message to chatHistory: " + fullMessage);
+
+        // Store the message in SharedDataSource
+        SharedDataSource.getInstance().storeMessage(channelName, coloredMessage.toString());
+
         new Handler(Looper.getMainLooper()).post(() -> {
             chatTextView.append(coloredMessage);
             chatTextView.append("\n");
         });
     }
+
 
     public String updateChatDisplay(String message) {
         Spannable spannable = MircColors.toSpannable(message);
@@ -289,9 +294,16 @@ public class ChatHelper {
     }
 
     public void displayChatHistory(TextView chatTextView) {
-        chatTextView.setText(""); // Clear the TextView
         for (String rawMessage : chatHistory) {
             Spannable coloredMessage = MircColors.toSpannable(rawMessage);
+            chatTextView.append(coloredMessage);
+            chatTextView.append("\n");
+        }
+
+        // Retrieve and display stored messages from SharedDataSource
+        List<String> storedMessages = SharedDataSource.getInstance().getStoredMessages(channelName);
+        for (String message : storedMessages) {
+            Spannable coloredMessage = MircColors.toSpannable(message);
             chatTextView.append(coloredMessage);
             chatTextView.append("\n");
         }

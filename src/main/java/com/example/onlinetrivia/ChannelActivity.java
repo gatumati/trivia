@@ -50,6 +50,11 @@ public class ChannelActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (getIntent().hasExtra("channel_name")) {
+            channelName = getIntent().getStringExtra("channel_name");
+            setTitle(channelName);
+            chatHelper.setChannelName(channelName);
+        }
         chatHelper.initializeListeners();
         chatHelper.displayChatHistory(chatTextView);
         

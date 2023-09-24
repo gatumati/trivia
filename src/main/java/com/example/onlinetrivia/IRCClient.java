@@ -167,8 +167,11 @@ public class IRCClient implements Runnable {
             handleNamesResponse(line);
         } else if (line.matches(".*\\s473\\s.*")) {
             Log.e("IRCClient", "Error: Cannot join channel (+i) - must be invited.");
+
         }
     }
+
+
 
     private boolean isPrivateMessage(String line, String channel) {
         // In most IRC servers, channels start with # or &
@@ -181,6 +184,7 @@ public class IRCClient implements Runnable {
         String channelOrUser = line.split("PRIVMSG")[1].split(" ")[1];
 
         Log.d("IRCClient", "Parsed Message: Channel/User - " + channelOrUser + ", Sender - " + sender + ", Message - " + message);
+        GlobalMessageListener.getInstance().onNewMessage(channelOrUser, sender, message);
 
         if (isPrivateMessage(line, channelOrUser)) {
             handlePrivateMessage(sender, message);

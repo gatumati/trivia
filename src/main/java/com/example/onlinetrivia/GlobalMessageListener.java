@@ -79,6 +79,12 @@ public class GlobalMessageListener {
         }
     }
 
+    public void onNewMessage(String channelOrUser, String sender, String message) {
+        String fullMessage = sender + ": " + message;
+        SharedDataSource.getInstance().storeMessage(channelOrUser, fullMessage);
+    }
+
+
     public synchronized boolean isUserInPrivateChats(String username) {
         return privateChats.contains(username);
     }
