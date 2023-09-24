@@ -2,6 +2,7 @@ package com.example.onlinetrivia;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -27,6 +28,7 @@ public class DrawerLeft {
 
     private List<String> combinedList = new ArrayList<>();
     private List<String> channels = new ArrayList<>();
+
 
     public DrawerLeft(Activity activity, ListView chatsListView, Button btnOpenLeftDrawer, DrawerLayout drawerLayout, ChatHelper chatHelper) {
         this.activity = activity;
@@ -94,31 +96,42 @@ public class DrawerLeft {
         });
     }
 
+    // Inside DrawerLeft class
     private void setupChatsListViewClickListener() {
-        chatsListView.setOnItemClickListener((parent, view, position, id) -> {
-            String selectedItem = combinedList.get(position);
-            Log.d("DrawerLeft", "Item clicked: " + selectedItem); // Add this log
+        Log.d("DrawerLeft", "Accessing combinedList: " + combinedList.toString());
+        List<String> combinedList = SharedDataSource.getInstance().getCombinedList();
 
-            if (selectedItem.startsWith("#")) {  // Channels typically start with '#'
-                // It's a channel, switch to the channel
-                chatHelper.switchToChannel(selectedItem);
+        chatsListView.setOnItemClickListener((parent, view, position, id) -> {
+            Log.d("DrawerLeft", "Item clicked at position: " + position);
+            if (!combinedList.isEmpty() && position >= 0 && position < combinedList.size()) {
+                String selectedItem = combinedList.get(position);
+                Intent intent = new Intent(context, ChannelActivity.class);
+                Log.d("DrawerLeft", "Launching ChannelActivity for: " + selectedItem);
+
+                intent.putExtra("channel_name", selectedItem);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);  // Combine both flags
+                Log.d("DrawerLeft", "Launching ChannelActivity for: " + selectedItem);
+                context.startActivity(intent);
             } else {
-                // It's a private chat user, switch to the user's chat
-                chatHelper.startPrivateChat(selectedItem);
+                Log.e("DrawerLeft", "Invalid position clicked: " + position);
             }
         });
     }
 
 
+
+
+
     public void refreshDrawerList() {
-        Collections.sort(channels);
-        List<String> channels = ChatHelper.getInstance().getConnectedChannels();
+        List<String> channelsList = ChatHelper.getInstance().getConnectedChannels();
         List<String> privateChats = ChatHelper.getInstance().getActivePrivateChats();
 
-        Collections.sort(channels);
-        List<String> combinedList = new ArrayList<>();
-        combinedList.addAll(channels);
+        Collections.sort(channelsList);
+        combinedList.addAll(channelsList);
         combinedList.addAll(privateChats);
+        Log.d("DrawerLeft", "Combined List: " + combinedList);
+
+
         ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, combinedList);
         chatsListView.setAdapter(adapter);
     }
