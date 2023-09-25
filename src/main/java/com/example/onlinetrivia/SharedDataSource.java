@@ -37,7 +37,10 @@ public class SharedDataSource {
         messagesMap.get(channelOrUser).add(message);
     }
 
-
+    public void handlePrivateMessage(String sender, String message) {
+        // Store the private message in SharedDataSource
+        SharedDataSource.getInstance().storeMessage(sender, message);
+    }
 
 
     public List<String> getStoredMessages(String channelOrUser) {

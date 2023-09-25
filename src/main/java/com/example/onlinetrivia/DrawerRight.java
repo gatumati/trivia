@@ -63,6 +63,11 @@ public class DrawerRight {
                 GlobalMessageListener.getInstance().addPrivateChat(selectedName);
             }
 
+            // Populate combinedList using SharedDataSource
+            List<String> combinedList = SharedDataSource.getInstance().getCombinedList();
+            combinedList.add(selectedName);
+            SharedDataSource.getInstance().setCombinedList(combinedList);
+
             // Close the DrawerRight
             drawerLayout.closeDrawer(GravityCompat.END);
         });

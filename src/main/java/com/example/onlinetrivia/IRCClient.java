@@ -1,5 +1,7 @@
 package com.example.onlinetrivia;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -192,15 +194,17 @@ public class IRCClient implements Runnable {
             if (messageListener != null) {
                 messageListener.onMessageReceived(channelOrUser, sender, message);
 
-                if (!privateChats.contains(sender) && !joinedChannels.contains(sender)) {
-                    privateChats.add(sender);
-
-
-
-                }
+                // Use a Handler to post UI updates to the main thread
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    if (!privateChats.contains(sender) && !joinedChannels.contains(sender)) {
+                        privateChats.add(sender);
+                        // Any other UI updates you want to make should go here
+                    }
+                });
             }
         }
     }
+
 
     private void handlePrivateMessage(String sender, String message) {
         // Do what you want with private messages here. For instance:

@@ -98,19 +98,22 @@ public class DrawerLeft {
 
     // Inside DrawerLeft class
     private void setupChatsListViewClickListener() {
-        Log.d("DrawerLeft", "Accessing combinedList: " + combinedList.toString());
-        List<String> combinedList = SharedDataSource.getInstance().getCombinedList();
-
         chatsListView.setOnItemClickListener((parent, view, position, id) -> {
-            Log.d("DrawerLeft", "Item clicked at position: " + position);
-            if (!combinedList.isEmpty() && position >= 0 && position < combinedList.size()) {
+            List<String> combinedList = SharedDataSource.getInstance().getCombinedList();
+            if (position < combinedList.size()) {
                 String selectedItem = combinedList.get(position);
-                Intent intent = new Intent(context, ChannelActivity.class);
-                Log.d("DrawerLeft", "Launching ChannelActivity for: " + selectedItem);
-
-                intent.putExtra("channel_name", selectedItem);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);  // Combine both flags
-                Log.d("DrawerLeft", "Launching ChannelActivity for: " + selectedItem);
+                Intent intent;
+                if (selectedItem.startsWith("#")) {
+                    // It's a channel
+                    intent = new Intent(context, ChannelActivity.class);
+                    intent.putExtra("channel_name", selectedItem);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT); // Bring to foreground if already exists
+                } else {
+                    // It's a private chat
+                    intent = new Intent(context, ChatActivity.class);
+                    intent.putExtra("user_name", selectedItem);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT); // Bring to foreground if already exists
+                }
                 context.startActivity(intent);
             } else {
                 Log.e("DrawerLeft", "Invalid position clicked: " + position);
@@ -122,11 +125,13 @@ public class DrawerLeft {
 
 
 
+
     public void refreshDrawerList() {
         List<String> channelsList = ChatHelper.getInstance().getConnectedChannels();
         List<String> privateChats = ChatHelper.getInstance().getActivePrivateChats();
 
         Collections.sort(channelsList);
+        Collections.sort(privateChats);
         combinedList.addAll(channelsList);
         combinedList.addAll(privateChats);
         Log.d("DrawerLeft", "Combined List: " + combinedList);

@@ -76,6 +76,12 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         chatHelper.onDestroy();
