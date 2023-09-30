@@ -76,6 +76,8 @@ public class GlobalMessageListener {
         if (!privateChats.contains(username)) {
             privateChats.add(username);
             notifyChatUpdated();
+            SharedDataSource.getInstance().getCombinedList().add(username);
+
         }
     }
 

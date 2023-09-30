@@ -1,7 +1,5 @@
 package com.example.onlinetrivia;
 
-import android.content.Context;
-import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -30,17 +28,7 @@ public class IRCClient implements Runnable {
     private List<String> joinedChannels = new ArrayList<>();
     private List<String> privateChats = new ArrayList<>();
 
-    private Context context;
-
-
-
     private ChannelMessageListener channelMessageListener;
-
-    private Handler mainThreadHandler = new Handler(Looper.getMainLooper());
-
-
-
-
 
 
 
@@ -48,8 +36,6 @@ public class IRCClient implements Runnable {
     public interface OnConnectionEstablishedListener {
         void onConnectionEstablished();
     }
-
-    
 
     private OnConnectionEstablishedListener connectionListener;
 
@@ -127,12 +113,6 @@ public class IRCClient implements Runnable {
             e.printStackTrace();
         }
     }
-    public IRCClient (Context context){
-        this.context=context;
-
-        }
-
-
 
     public void joinChannel(String channel) {
         new Thread(() -> {
@@ -208,36 +188,22 @@ public class IRCClient implements Runnable {
         Log.d("IRCClient", "Parsed Message: Channel/User - " + channelOrUser + ", Sender - " + sender + ", Message - " + message);
         GlobalMessageListener.getInstance().onNewMessage(channelOrUser, sender, message);
 
-        if (context != null) {
-            Intent intent = new Intent(context, ChatActivity.class);
-            intent.putExtra("chatUser", sender);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(intent);
-        } else {
-            Log.e("IRCClient", "Context is null. Cannot start ChatActivity.");
-        }
-
         if (isPrivateMessage(line, channelOrUser)) {
             handlePrivateMessage(sender, message);
         } else {
             if (messageListener != null) {
                 messageListener.onMessageReceived(channelOrUser, sender, message);
 
-                if (!privateChats.contains(sender) && !joinedChannels.contains(sender)) {
-                    privateChats.add(sender);
-
-                    mainThreadHandler.post(() -> {
-                        // Your UI update code goes here
-                        SharedDataSource.getInstance().updateCombinedList(privateChats);
-
-
-
-                    });
-                }
+                // Use a Handler to post UI updates to the main thread
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    if (!privateChats.contains(sender) && !joinedChannels.contains(sender)) {
+                        privateChats.add(sender);
+                        // Any other UI updates you want to make should go here
+                    }
+                });
             }
         }
     }
-
 
 
     private void handlePrivateMessage(String sender, String message) {
@@ -245,8 +211,6 @@ public class IRCClient implements Runnable {
         if (privateMessageListener != null) {
             privateMessageListener.onPrivateMessageReceived(sender, message);
             GlobalMessageListener.getInstance().addPrivateChat(sender);
-
-
         }
     }
 

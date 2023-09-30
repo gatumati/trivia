@@ -131,6 +131,9 @@ public class ChatHelper {
     }
 
     private String stripPrefixes(String name) {
+        if (name == null) {
+            return "";
+        }
         return name.replaceAll("^[@+]", "");
     }
 
@@ -155,9 +158,10 @@ public class ChatHelper {
 
     public void handleChatsItemClick(String selectedItem) {
         if (privateChats.contains(selectedItem)) {
-            Intent chatIntent = new Intent(context, ChatActivity.class);
-            chatIntent.putExtra("chatTarget", selectedItem);
-            context.startActivity(chatIntent);
+            Intent intent = new Intent(context, ChatActivity.class);
+            intent.putExtra("chatTarget", selectedItem); // Assuming 'sender' is the user who sent the private message
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            context.startActivity(intent);
         } else {
             switchToChannel(selectedItem);
         }
@@ -171,6 +175,8 @@ public class ChatHelper {
                 appendIrcMessage(sender + ": " + message);
                 GlobalMessageListener.getInstance().addMessage(channel, sender + ": " + message);
 
+
+
             }
         });
 
@@ -180,6 +186,8 @@ public class ChatHelper {
                 privateMessageListener.onPrivateMessageReceived(sender, message);
                 if (!GlobalMessageListener.getInstance().isUserInPrivateChats(sender)) {
                     GlobalMessageListener.getInstance().addPrivateChat(sender);
+                    SharedDataSource.getInstance().handlePrivateMessage(sender, message);
+
 
                     if (drawerListRefreshListener != null) {
                         drawerListRefreshListener.onRefreshRequested();
@@ -222,11 +230,15 @@ public class ChatHelper {
 
     public void sendMessage(String recipient, String message) {
         Log.d("ChatHelper", "Original recipient: " + recipient);
-        recipient = stripPrefixes(recipient);
+        if (recipient != null) {
+            recipient = stripPrefixes(recipient);
+        }
         Log.d("ChatHelper", "Stripped recipient: " + recipient);
 
         Log.d("ChatHelper", "Original message: " + message);
-        message = stripPrefixes(message);
+        if (message != null) {
+            message = stripPrefixes(message);
+        }
         Log.d("ChatHelper", "Stripped message: " + message);
 
         String currentNickname = ircClient.getNickname();
@@ -236,6 +248,7 @@ public class ChatHelper {
         ircClient.sendMessageToChannel(recipient, message);
         GlobalMessageListener.getInstance().addPrivateMessage(ircClient.getNickname(), recipient, message);
         Log.d("ChatHelper", "Sending message to recipient: " + recipient + " with message: " + message);
+        SharedDataSource.getInstance().storeMessage(recipient, message);
     }
 
 
@@ -266,10 +279,12 @@ public class ChatHelper {
 
 
     public void startPrivateChat(String targetUser) {
+
         Log.d("ChatHelper", "Starting private chat with: " + targetUser);
-        Intent chatIntent = new Intent(context, ChatActivity.class);
-        chatIntent.putExtra("chatTarget", targetUser);
-        context.startActivity(chatIntent);
+        Intent intent = new Intent(context, ChatActivity.class);
+        intent.putExtra("chatTarget", targetUser); // Assuming 'sender' is the user who sent the private message
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        context.startActivity(intent);
         addActivePrivateChat(targetUser);
     }
 
@@ -280,6 +295,8 @@ public class ChatHelper {
 
         // Store the message in SharedDataSource
         SharedDataSource.getInstance().storeMessage(channelName, coloredMessage.toString());
+
+
 
         new Handler(Looper.getMainLooper()).post(() -> {
             chatTextView.append(coloredMessage);
@@ -302,6 +319,7 @@ public class ChatHelper {
 
         // Retrieve and display stored messages from SharedDataSource
         List<String> storedMessages = SharedDataSource.getInstance().getStoredMessages(channelName);
+
         for (String message : storedMessages) {
             Spannable coloredMessage = MircColors.toSpannable(message);
             chatTextView.append(coloredMessage);
@@ -352,4 +370,3 @@ public class ChatHelper {
         }
     }
 }
-

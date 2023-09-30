@@ -3,6 +3,8 @@ package com.example.onlinetrivia;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -29,6 +31,8 @@ public class DrawerLeft {
     private List<String> combinedList = new ArrayList<>();
     private List<String> channels = new ArrayList<>();
 
+    private Handler mainHandler = new Handler(Looper.getMainLooper());
+
 
     public DrawerLeft(Activity activity, ListView chatsListView, Button btnOpenLeftDrawer, DrawerLayout drawerLayout, ChatHelper chatHelper) {
         this.activity = activity;
@@ -52,11 +56,11 @@ public class DrawerLeft {
 
             drawerLayout.openDrawer(GravityCompat.START);
             refreshDrawer();
-
         });
         GlobalMessageListener.getInstance().setOnChatUpdateListener(() -> {
-            refreshDrawerList();
         });
+
+
 
         ChatHelper chatHelper = ChatHelper.getInstance();
         chatHelper.setOnDrawerListRefreshRequestedListener(() -> {
@@ -86,6 +90,7 @@ public class DrawerLeft {
         chatsListView.setAdapter(adapter);
     }
 
+
     public void updateConnectedChannelsList() {
         connectedChannels = ircClient.getCurrentChatList();
         List<String> privateChats = GlobalMessageListener.getInstance().getPrivateChats();
@@ -93,6 +98,7 @@ public class DrawerLeft {
         activity.runOnUiThread(() -> {
             ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, connectedChannels);
             chatsListView.setAdapter(adapter);
+
         });
     }
 
@@ -111,8 +117,8 @@ public class DrawerLeft {
                 } else {
                     // It's a private chat
                     intent = new Intent(context, ChatActivity.class);
-                    intent.putExtra("user_name", selectedItem);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT); // Bring to foreground if already exists
+                    intent.putExtra("chatTarget", selectedItem);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 }
                 context.startActivity(intent);
             } else {
@@ -132,13 +138,17 @@ public class DrawerLeft {
 
         Collections.sort(channelsList);
         Collections.sort(privateChats);
+        combinedList.clear();
         combinedList.addAll(channelsList);
         combinedList.addAll(privateChats);
-        Log.d("DrawerLeft", "Combined List: " + combinedList);
+        activity.runOnUiThread(() -> {
+            Log.d("DrawerLeft", "Combined List: " + combinedList);
 
+        });
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, combinedList);
         chatsListView.setAdapter(adapter);
+        refreshDrawerList();
     }
 
 
