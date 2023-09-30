@@ -1,5 +1,6 @@
 package com.example.onlinetrivia;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -33,17 +34,8 @@ public class ChatActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d("ChatActivity", "onResume called for user: " + targetUser);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
-
-        chatHelper = new ChatHelper(this);
-
-
-        // Initialize UI components
-        chatTextView = findViewById(R.id.chatTextView);
-        messageEditText = findViewById(R.id.messageEditText);
-        sendMessageButton = findViewById(R.id.sendMessageButton);
 
         if (targetUser != null) {
             // Use the targetUser variable
@@ -53,6 +45,18 @@ public class ChatActivity extends AppCompatActivity {
         targetUser = getIntent().getStringExtra("chatTarget");
 
         final String targetUser = getIntent().getStringExtra("chatTarget");
+        Log.d("ChatActivity", "onCreate called for user: " + targetUser);
+
+
+        chatHelper = new ChatHelper(this);
+
+
+
+        // Initialize UI components
+        chatTextView = findViewById(R.id.chatTextView);
+        messageEditText = findViewById(R.id.messageEditText);
+        sendMessageButton = findViewById(R.id.sendMessageButton);
+
 
 
         // Retrieve the chat history for the target user
@@ -120,17 +124,29 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        targetUser = intent.getStringExtra("chatTarget");
+        // Refresh chat messages for the new targetUser
+    }
+
+
+
+    @Override
     protected void onResume() {
         super.onResume();
 
-        String activePrivateChatUser = SharedDataSource.getInstance().getActivePrivateChatUser();
-        List<String> chatContent = SharedDataSource.getInstance().getStoredMessages(activePrivateChatUser);
+        if (targetUser == null) {
+            targetUser = getIntent().getStringExtra("chatTarget");
+        }
+
+        List<String> chatContent = SharedDataSource.getInstance().getStoredMessages(targetUser);
 
         // Update the UI to display the loaded chat content
-        // For example, if you're using an ArrayAdapter:
         adapter.addAll(chatContent);
         adapter.notifyDataSetChanged();
     }
+
 
     @Override
     protected void onDestroy() {
