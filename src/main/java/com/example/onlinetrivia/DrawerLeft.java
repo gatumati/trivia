@@ -55,7 +55,6 @@ public class DrawerLeft {
         btnOpenLeftDrawer.setOnClickListener(view -> {
 
             drawerLayout.openDrawer(GravityCompat.START);
-            refreshDrawer();
         });
         GlobalMessageListener.getInstance().setOnChatUpdateListener(() -> {
         });
@@ -84,11 +83,7 @@ public class DrawerLeft {
         });
     }
 
-    public void refreshDrawer() {
-        List<String> names = GlobalMessageListener.getInstance().getNamesList();
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, names);
-        chatsListView.setAdapter(adapter);
-    }
+
 
 
     public void updateConnectedChannelsList() {
@@ -113,14 +108,14 @@ public class DrawerLeft {
                     // It's a channel
                     intent = new Intent(context, ChannelActivity.class);
                     intent.putExtra("channel_name", selectedItem);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT); // Bring to foreground if already exists
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 } else {
                     // It's a private chat
                     intent = new Intent(context, ChatActivity.class);
                     intent.putExtra("chatTarget", selectedItem);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 }
-                context.startActivity(intent);
+                activity.getApplicationContext().startActivity(intent);
             } else {
                 Log.e("DrawerLeft", "Invalid position clicked: " + position);
             }
@@ -138,7 +133,6 @@ public class DrawerLeft {
 
         Collections.sort(channelsList);
         Collections.sort(privateChats);
-        combinedList.clear();
         combinedList.addAll(channelsList);
         combinedList.addAll(privateChats);
         activity.runOnUiThread(() -> {

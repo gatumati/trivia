@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
+
 public class ChatHelper {
 
 
@@ -77,6 +79,13 @@ public class ChatHelper {
         this.context = context;
         this.ircClient = IRCClient.getInstance();
         initializeListeners();
+    }
+
+    public static ChatHelper getInstance(Context context) {
+        if (instance == null) {
+            instance = new ChatHelper(context);
+        }
+        return instance;
     }
 
     // Methods to manipulate the connected channels
@@ -160,7 +169,7 @@ public class ChatHelper {
         if (privateChats.contains(selectedItem)) {
             Intent intent = new Intent(context, ChatActivity.class);
             intent.putExtra("chatTarget", selectedItem); // Assuming 'sender' is the user who sent the private message
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
             context.startActivity(intent);
         } else {
             switchToChannel(selectedItem);
@@ -186,13 +195,9 @@ public class ChatHelper {
                 privateMessageListener.onPrivateMessageReceived(sender, message);
                 if (!GlobalMessageListener.getInstance().isUserInPrivateChats(sender)) {
                     GlobalMessageListener.getInstance().addPrivateChat(sender);
-                    SharedDataSource.getInstance().handlePrivateMessage(sender, message);
                     Log.d("ChatHelper", "Sending Private Message To: " + sender);
-                    Intent intent = new Intent(context, ChatActivity.class);
-                    intent.putExtra("chatTarget", sender); // Assuming 'sender' is the user who sent the private message
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                    context.startActivity(intent);
-                    addActivePrivateChat(sender);
+                    Intent serviceIntent = new Intent(context, MessageService.class);
+                    context.startService(serviceIntent);
 
 
 
@@ -213,15 +218,13 @@ public class ChatHelper {
             }
         });
 
+        // Listner for 1st time reciving private message
         ircClient.setPrivateMessageListener((sender, message) -> {
             GlobalMessageListener.getInstance().addPrivateMessage(sender, ircClient.getNickname(), message);
             SharedDataSource.getInstance().handlePrivateMessage(sender, message);
             Log.d("ChatHelper", "Reciving Private Message From: " + sender);
-            Intent intent = new Intent(context, ChatActivity.class);
-            intent.putExtra("chatTarget", sender); // Assuming 'sender' is the user who sent the private message
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-            context.startActivity(intent);
-            addActivePrivateChat(sender);
+            Intent serviceIntent = new Intent(context, MessageService.class);
+            context.startService(serviceIntent);
 
             if (drawerListRefreshListener != null) {
                 drawerListRefreshListener.onRefreshRequested();
@@ -297,10 +300,9 @@ public class ChatHelper {
 
         Log.d("ChatHelper", "Starting private chat with: " + targetUser);
         Intent intent = new Intent(context, ChatActivity.class);
-        intent.putExtra("chatTarget", targetUser); // Assuming 'sender' is the user who sent the private message
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-        context.startActivity(intent);
-        addActivePrivateChat(targetUser);
+        Intent serviceIntent = new Intent(context, MessageService.class);
+
+        context.startService(serviceIntent);
     }
 
     private void appendIrcMessage(String fullMessage) {

@@ -36,19 +36,23 @@ public class ChatActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        targetUser = getIntent().getStringExtra("chatTarget");
 
         if (targetUser != null) {
             // Use the targetUser variable
         } else {
             Log.e("ChatActivity", "targetUser is null");
         }
-        targetUser = getIntent().getStringExtra("chatTarget");
 
         final String targetUser = getIntent().getStringExtra("chatTarget");
         Log.d("ChatActivity", "onCreate called for user: " + targetUser);
 
 
+
+
         chatHelper = new ChatHelper(this);
+
+
 
 
 
@@ -119,6 +123,10 @@ public class ChatActivity extends AppCompatActivity {
 
                 /// Store the received private message
                 GlobalMessageListener.getInstance().addPrivateMessage(sender, targetUser, message);
+                List<String> chatContent = SharedDataSource.getInstance().getStoredMessages(targetUser);
+
+                // Update the UI to display the loaded chat content
+                adapter.addAll(chatContent);
             }
         });
     }
@@ -135,10 +143,6 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        if (targetUser == null) {
-            targetUser = getIntent().getStringExtra("chatTarget");
-        }
 
         List<String> chatContent = SharedDataSource.getInstance().getStoredMessages(targetUser);
 
