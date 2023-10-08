@@ -97,6 +97,7 @@ public class ChatActivity extends AppCompatActivity {
 
         // Set OnClick Listener for Drawer Button
         btnOpenLeftDrawer.setOnClickListener(view -> drawerLayout.openDrawer(GravityCompat.START));
+
     }
 
     private void setupPrivateMessageListeners() {
@@ -104,17 +105,11 @@ public class ChatActivity extends AppCompatActivity {
         sendMessageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-
                 String message = messageEditText.getText().toString().trim();
                 if (!message.isEmpty()) {
+                    // Assuming the target user for the private message is passed as an intent extra
                     String targetUser = getIntent().getStringExtra("chatTarget");
-                    String currentUsername = (ircClient != null) ? ircClient.getNickname() : "DefaultUsername";
                     chatHelper.sendMessage(targetUser, message);
-
-                    // Store the sent message
-                    GlobalMessageListener.getInstance().addPrivateMessage(currentUsername, targetUser, message);
-
                     messageEditText.setText("");
                 }
             }
@@ -124,27 +119,25 @@ public class ChatActivity extends AppCompatActivity {
         chatHelper.setPrivateMessageListener(new ChatHelper.OnPrivateMessageReceivedListener() {
 
 
+
+
             @Override
             public void onPrivateMessageReceived(String sender, String message) {
-                // Check if the sender of the incoming message matches the targetUser
-                if (!sender.equals(targetUser)) {
-                    // This message is not from the current chat user, so ignore it
-                    return;
-                }
 
-                // Display the message if it's from the current chat user
+                Log.d("ChatActivity", "Received message: " + message + " from: " + sender);
+
                 chatTextView.append(sender + ": " + message + "\n");
 
-                // Store the received private message
+                /// Store the received private message
                 GlobalMessageListener.getInstance().addPrivateMessage(sender, targetUser, message);
                 List<String> chatContent = SharedDataSource.getInstance().getStoredMessages(targetUser);
 
                 // Update the UI to display the loaded chat content
                 adapter.addAll(chatContent);
             }
-
         });
     }
+
 
     private void parsePrivateMessage(String retrievedMessage) {
         String[] parts = retrievedMessage.split(": ", 2);
@@ -162,15 +155,6 @@ public class ChatActivity extends AppCompatActivity {
         targetUser = intent.getStringExtra("chatTarget");
         // Refresh chat messages for the new targetUser
 
-        // Load the chat history for the new targetUser
-        List<String> chatContent = GlobalMessageListener.getInstance().getPrivateMessagesFor(targetUser);
-        for (String historyMessage : chatContent) {
-            parsePrivateMessage(historyMessage);
-        }
-
-        // Update the UI to display the loaded chat content
-        adapter.addAll(chatContent);
-        adapter.notifyDataSetChanged();
     }
 
 
