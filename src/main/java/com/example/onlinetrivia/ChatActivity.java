@@ -36,6 +36,8 @@ public class ChatActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+
+
         targetUser = getIntent().getStringExtra("chatTarget");
 
         if (targetUser != null) {
@@ -51,6 +53,8 @@ public class ChatActivity extends AppCompatActivity {
 
 
         chatHelper = new ChatHelper(this);
+        // Initialize the IRCClient instance
+        this.ircClient = IRCClient.getInstance();
 
 
 
@@ -107,9 +111,14 @@ public class ChatActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String message = messageEditText.getText().toString().trim();
                 if (!message.isEmpty()) {
-                    // Assuming the target user for the private message is passed as an intent extra
                     String targetUser = getIntent().getStringExtra("chatTarget");
+                    String currentUsername = (ircClient != null) ? ircClient.getNickname() : "DefaultUsername";
                     chatHelper.sendMessage(targetUser, message);
+
+                    // Store the sent message
+                    GlobalMessageListener.getInstance().addPrivateMessage(currentUsername, targetUser, message);
+                    SharedDataSource.getInstance().storePrivateMessage(currentUsername, message);
+
                     messageEditText.setText("");
                 }
             }
@@ -123,20 +132,26 @@ public class ChatActivity extends AppCompatActivity {
 
             @Override
             public void onPrivateMessageReceived(String sender, String message) {
+                // Check if the sender of the incoming message matches the targetUser
+                if (!sender.equals(targetUser)) {
+                    // This message is not from the current chat user, so ignore it
+                    return;
+                }
 
-                Log.d("ChatActivity", "Received message: " + message + " from: " + sender);
-
+                // Display the message if it's from the current chat user
                 chatTextView.append(sender + ": " + message + "\n");
 
-                /// Store the received private message
+                // Store the received private message
                 GlobalMessageListener.getInstance().addPrivateMessage(sender, targetUser, message);
                 List<String> chatContent = SharedDataSource.getInstance().getStoredMessages(targetUser);
 
                 // Update the UI to display the loaded chat content
                 adapter.addAll(chatContent);
             }
+
         });
     }
+
 
 
     private void parsePrivateMessage(String retrievedMessage) {
@@ -163,12 +178,33 @@ public class ChatActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
+        // Clear the adapter
+        adapter.clear();
+
+        // Get the current user's nickname
+        String currentUsername = (ircClient != null && ircClient.getNickname() != null) ? ircClient.getNickname() : "DefaultUsername";
+
+        // Get the chat history for the target user
         List<String> chatContent = SharedDataSource.getInstance().getStoredMessages(targetUser);
 
+        // Add your own messages to the chat history
+        List<String> myMessages = SharedDataSource.getInstance().getStoredMessages(currentUsername);
+        for (String myMessage : myMessages) {
+            if (!chatContent.contains(myMessage)) {
+                chatContent.add(myMessage);
+            }
+        }
+
         // Update the UI to display the loaded chat content
+        for (String historyMessage : chatContent) {
+            parsePrivateMessage(historyMessage);
+        }
+
         adapter.addAll(chatContent);
         adapter.notifyDataSetChanged();
     }
+
+
 
 
     @Override
