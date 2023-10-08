@@ -3,7 +3,6 @@ package com.example.onlinetrivia;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -106,49 +105,36 @@ public class ChatActivity extends AppCompatActivity {
 
     private void setupPrivateMessageListeners() {
         // Set up the send message button listener for private messages
-        sendMessageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String message = messageEditText.getText().toString().trim();
-                if (!message.isEmpty()) {
-                    String targetUser = getIntent().getStringExtra("chatTarget");
-                    String currentUsername = (ircClient != null) ? ircClient.getNickname() : "DefaultUsername";
-                    chatHelper.sendMessage(targetUser, message);
+        sendMessageButton.setOnClickListener(v -> {
+            String message = messageEditText.getText().toString().trim();
+            if (!message.isEmpty()) {
+                String currentUsername = (ircClient != null) ? ircClient.getNickname() : "DefaultUsername";
+                chatHelper.sendMessage(targetUser, message);
 
-                    // Store the sent message
-                    GlobalMessageListener.getInstance().addPrivateMessage(currentUsername, targetUser, message);
-                    SharedDataSource.getInstance().storePrivateMessage(currentUsername, message);
+                // Store the sent message
+                GlobalMessageListener.getInstance().addPrivateMessage(currentUsername, targetUser, message);
 
-                    messageEditText.setText("");
-                }
+                messageEditText.setText("");
             }
         });
 
         // Set up the private message listener
-        chatHelper.setPrivateMessageListener(new ChatHelper.OnPrivateMessageReceivedListener() {
-
-
-
-
-            @Override
-            public void onPrivateMessageReceived(String sender, String message) {
-                // Check if the sender of the incoming message matches the targetUser
-                if (!sender.equals(targetUser)) {
-                    // This message is not from the current chat user, so ignore it
-                    return;
-                }
-
-                // Display the message if it's from the current chat user
-                chatTextView.append(sender + ": " + message + "\n");
-
-                // Store the received private message
-                GlobalMessageListener.getInstance().addPrivateMessage(sender, targetUser, message);
-                List<String> chatContent = SharedDataSource.getInstance().getStoredMessages(targetUser);
-
-                // Update the UI to display the loaded chat content
-                adapter.addAll(chatContent);
+        chatHelper.setPrivateMessageListener((sender, message) -> {
+            // Check if the sender of the incoming message matches the targetUser
+            if (!sender.equals(targetUser)) {
+                // This message is not from the current chat user, so ignore it
+                return;
             }
 
+            // Display the message if it's from the current chat user
+            chatTextView.append(sender + ": " + message + "\n");
+
+            // Store the received private message
+            GlobalMessageListener.getInstance().addPrivateMessage(sender, targetUser, message);
+            List<String> chatContent = SharedDataSource.getInstance().getStoredMessages(targetUser);
+
+            // Update the UI to display the loaded chat content
+            adapter.addAll(chatContent);
         });
     }
 
@@ -168,43 +154,38 @@ public class ChatActivity extends AppCompatActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         targetUser = intent.getStringExtra("chatTarget");
-        // Refresh chat messages for the new targetUser
 
+        // Clear the adapter to avoid duplication
+        adapter.clear();
+
+        // Refresh chat messages for the new targetUser
+        List<String> chatContent = SharedDataSource.getInstance().getStoredMessages(targetUser);
+        adapter.addAll(chatContent);
+        adapter.notifyDataSetChanged();
     }
+
 
 
 
     @Override
     protected void onResume() {
         super.onResume();
-
-        // Clear the adapter
+        // Clear the adapter to avoid duplication
         adapter.clear();
-
-        // Get the current user's nickname
-        String currentUsername = (ircClient != null && ircClient.getNickname() != null) ? ircClient.getNickname() : "DefaultUsername";
 
         // Get the chat history for the target user
         List<String> chatContent = SharedDataSource.getInstance().getStoredMessages(targetUser);
 
         // Add your own messages to the chat history
-        List<String> myMessages = SharedDataSource.getInstance().getStoredMessages(currentUsername);
-        for (String myMessage : myMessages) {
-            if (!chatContent.contains(myMessage)) {
-                chatContent.add(myMessage);
-            }
-        }
+        String currentUsername = (ircClient != null) ? ircClient.getNickname() : "DefaultUsername";
+        chatContent.addAll(SharedDataSource.getInstance().getStoredMessages(currentUsername));
+
+        // Sort the chat content if needed (based on timestamp or other criteria)
 
         // Update the UI to display the loaded chat content
-        for (String historyMessage : chatContent) {
-            parsePrivateMessage(historyMessage);
-        }
-
         adapter.addAll(chatContent);
         adapter.notifyDataSetChanged();
     }
-
-
 
 
     @Override
