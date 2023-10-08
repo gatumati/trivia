@@ -39,6 +39,16 @@ public class SharedDataSource {
         messagesMap.get(channelOrUser).add(message);
     }
 
+    public void storePrivateMessage(String sender, String message) {
+        String formattedMessage = sender + ": " + message;
+        if (!messagesMap.containsKey(sender)) {
+            messagesMap.put(sender, new ArrayList<>());
+        }
+        messagesMap.get(sender).add(formattedMessage);
+    }
+
+
+
     public void updateCombinedList(List<String> updatedList) {
         for (String item : updatedList) {
             if (!combinedList.contains(item)) {
@@ -51,8 +61,6 @@ public class SharedDataSource {
         // Store the private message in SharedDataSource
         SharedDataSource.getInstance().storeMessage(sender, message);
     }
-
-
 
     public void setActivePrivateChatUser(String user) {
         this.activePrivateChatUser = user;

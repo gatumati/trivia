@@ -53,7 +53,10 @@ public class GlobalMessageListener {
     }
 
     public synchronized void addPrivateMessage(String sender, String recipient, String message) {
-        privateMessages.add(sender + "->" + recipient + ": " + message);
+        privateMessages.add(sender + ": " + message);
+        System.out.println("Added private message: " + message);
+
+        SharedDataSource.getInstance().storeMessage(sender, message);
         // Notify all listeners
         for (Runnable listener : privateMessageListeners) {
             listener.run();
@@ -62,11 +65,28 @@ public class GlobalMessageListener {
 
     public synchronized List<String> getMessagesFor(String channel) {
         return messages.stream().filter(msg -> msg.startsWith(channel + ":")).collect(Collectors.toList());
+
     }
 
-    public synchronized List<String> getPrivateMessagesFor(String recipient) {
-        return privateMessages.stream().filter(msg -> msg.contains("->" + recipient + ":")).collect(Collectors.toList());
+    public synchronized List<String> getPrivateMessagesFor(String senderOrRecipient) {
+        // Fetch messages from GlobalMessageListener's privateMessages list
+        List<String> localMessages = privateMessages.stream()
+                .filter(msg -> msg.startsWith(senderOrRecipient + ":"))
+                .collect(Collectors.toList());
+
+        // Fetch messages from SharedDataSource
+        List<String> sharedDataMessages = SharedDataSource.getInstance().getStoredMessages(senderOrRecipient);
+
+        // Combine both lists
+        localMessages.addAll(sharedDataMessages);
+
+        return localMessages;
     }
+
+
+
+
+
 
     public synchronized void addUserToNamesList(String name) {
         namesList.add(name);
