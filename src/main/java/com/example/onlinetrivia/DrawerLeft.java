@@ -87,17 +87,41 @@ public class DrawerLeft {
 
 
     public void updateConnectedChannelsList() {
-        connectedChannels = ircClient.getCurrentChatList();
-        List<String> privateChats = GlobalMessageListener.getInstance().getPrivateChats();
-        connectedChannels.addAll(privateChats);
-        activity.runOnUiThread(() -> {
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, connectedChannels);
-            chatsListView.setAdapter(adapter);
+        // Get the current list of channels
+        List<String> currentChannels = ircClient.getCurrentChatList();
 
+        // Get the list of private chats
+        List<String> privateChats = GlobalMessageListener.getInstance().getPrivateChats();
+
+        // Create a new combined list
+        List<String> combinedList = new ArrayList<>(currentChannels);
+
+        // Add private chats to the combined list, checking for duplicates
+        for (String privateChat : privateChats) {
+            if (!combinedList.contains(privateChat)) {
+                combinedList.add(privateChat);
+            }
+        }
+
+        // Update the combinedList in SharedDataSource
+        SharedDataSource.getInstance().setCombinedList(combinedList);
+
+        // Update the UI
+        activity.runOnUiThread(() -> {
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_list_item_1, combinedList);
+            chatsListView.setAdapter(adapter);
+            // If you want to automatically display messages for the last user added to the list:
+            if (!combinedList.isEmpty()) {
+                String lastUser = combinedList.get(combinedList.size() - 1);
+                if (activity instanceof ChatActivity) {
+                    ChatActivity chatActivity = (ChatActivity) activity;
+                    chatActivity.displayMessagesForUser(lastUser);
+                }
+            }
         });
     }
 
-    // Inside DrawerLeft class
+
     private void setupChatsListViewClickListener() {
         chatsListView.setOnItemClickListener((parent, view, position, id) -> {
             List<String> combinedList = SharedDataSource.getInstance().getCombinedList();
@@ -108,21 +132,29 @@ public class DrawerLeft {
                     // It's a channel
                     intent = new Intent(context, ChannelActivity.class);
                     intent.putExtra("channel_name", selectedItem);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 } else {
                     // It's a private chat
                     intent = new Intent(context, ChatActivity.class);
                     intent.putExtra("chatTarget", selectedItem);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+
+                    // Only cast to ChatActivity when you're sure it's a ChatActivity
+                    if (activity instanceof ChatActivity) {
+                        ChatActivity chatActivity = (ChatActivity) activity;
+                        chatActivity.displayMessagesForUser(selectedItem);
+                    }
                 }
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 activity.getApplicationContext().startActivity(intent);
+
+                // Close the drawer
+                if (drawerLayout != null) {
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                }
             } else {
                 Log.e("DrawerLeft", "Invalid position clicked: " + position);
             }
         });
     }
-
-
 
 
 
@@ -144,6 +176,8 @@ public class DrawerLeft {
         chatsListView.setAdapter(adapter);
         refreshDrawerList();
     }
+
+
 
 
 

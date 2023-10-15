@@ -21,7 +21,7 @@
     <string name="send">Send</string>
     <string name="ctcp_version">VERSION</string>
     <string name="ctcp_ping">PING</string>
-    <string name="join_channel">Join Channel</string>
+    <string name="join_channel">Select Chat Room</string>
 
     <!-- Popup prompts -->
     <string name="change_nickname">Change Nickname</string>

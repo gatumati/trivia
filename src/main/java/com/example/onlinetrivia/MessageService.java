@@ -62,7 +62,7 @@ public class MessageService extends Service {
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("New message from " + sender)
                 .setContentText(message)
-                .setSmallIcon(R.drawable.ic_message) // Replace with your app's icon
+                .setSmallIcon(R.drawable.ic_message)
                 .setContentIntent(pendingIntent)
                 .build();
 

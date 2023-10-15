@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ChatActivity extends AppCompatActivity {
@@ -24,6 +25,8 @@ public class ChatActivity extends AppCompatActivity {
     private DrawerLeft drawerLeft;
     private ListView chatsListView;
     private DrawerLayout drawerLayout;
+
+    private String currentChatUser;
 
     private IRCClient ircClient;
 
@@ -56,7 +59,7 @@ public class ChatActivity extends AppCompatActivity {
         this.ircClient = IRCClient.getInstance();
 
 
-
+        displayMessagesForUser(currentChatUser);
 
 
         // Initialize UI components
@@ -69,6 +72,7 @@ public class ChatActivity extends AppCompatActivity {
         // Retrieve the chat history for the target user
 
         List<String> chatHistory = GlobalMessageListener.getInstance().getPrivateMessagesFor(targetUser);
+
 
         for (String historyMessage : chatHistory) {
             parsePrivateMessage(historyMessage);
@@ -156,10 +160,16 @@ public class ChatActivity extends AppCompatActivity {
         targetUser = intent.getStringExtra("chatTarget");
 
         // Clear the adapter to avoid duplication
-        adapter.clear();
+        // Load the chat history for the new targetUser
+        List<String> chatContent = GlobalMessageListener.getInstance().getPrivateMessagesFor(targetUser);
+        for (String historyMessage : chatContent) {
+            parsePrivateMessage(historyMessage);
+        }
 
-        // Refresh chat messages for the new targetUser
-        List<String> chatContent = SharedDataSource.getInstance().getStoredMessages(targetUser);
+        displayMessagesForUser(currentChatUser);
+
+        // Update the UI to display the loaded chat content
+        adapter.clear();
         adapter.addAll(chatContent);
         adapter.notifyDataSetChanged();
     }
@@ -170,6 +180,8 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+
         // Clear the adapter to avoid duplication
         adapter.clear();
 
@@ -185,7 +197,42 @@ public class ChatActivity extends AppCompatActivity {
         // Update the UI to display the loaded chat content
         adapter.addAll(chatContent);
         adapter.notifyDataSetChanged();
+
+        displayMessagesForUser(currentChatUser);
     }
+
+    void displayMessagesForUser(String targetUser) {
+        List<String> allMessagesStrings = SharedDataSource.getInstance().getStoredMessages(targetUser);
+        ArrayList<MessageFilter> allMessages = new ArrayList<>();
+
+        for (String messageString : allMessagesStrings) {
+            if (messageString != null) {
+                String[] parts = messageString.split(":");
+                if (parts.length >= 3) { // Ensure the messageString has the expected format
+                    String sender = parts[0];
+                    String recipient = parts[1];
+
+                    allMessages.add(new MessageFilter(sender, recipient));
+                }
+            }
+        }
+
+        ArrayList<MessageFilter> filteredMessages = new ArrayList<>();
+
+        for (MessageFilter message : allMessages) {
+            if (message.getSender().equals(targetUser) || message.getRecipient().equals(targetUser)) {
+                filteredMessages.add(message);
+            }
+        }
+
+        // Now, use the filteredMessages list to display in the chat UI
+    }
+
+
+
+
+
+
 
 
     @Override

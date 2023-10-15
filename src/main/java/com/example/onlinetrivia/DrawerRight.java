@@ -58,6 +58,7 @@ public class DrawerRight {
             // Initiate private chat
             chatHelper.handleNamesItemClick(selectedName);
 
+
             // Add to private chats list in GlobalMessageListener
             if (!GlobalMessageListener.getInstance().isUserInPrivateChats(selectedName)) {
                 GlobalMessageListener.getInstance().addPrivateChat(selectedName);

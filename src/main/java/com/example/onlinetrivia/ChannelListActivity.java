@@ -24,6 +24,7 @@ public class ChannelListActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_channel_list); // Assuming you have a layout named activity_channel_list
 
+
         // Get the instance of IRCClient
         ircClient = IRCClient.getInstance();
 

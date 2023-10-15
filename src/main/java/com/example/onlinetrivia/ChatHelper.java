@@ -50,6 +50,8 @@ public class ChatHelper {
     private DrawerLayout drawerLayout;
     private Button btnOpenRightDrawer, btnOpenLeftDrawer;
 
+
+
     // New member variables for private message handling
     private Map<String, StringBuilder> chatHistories = new HashMap<>();
 
@@ -160,6 +162,7 @@ public class ChatHelper {
 
     public void handleNamesItemClick(String selectedName) {
         startPrivateChat(selectedName);
+
         if(drawerLayout != null) {
             drawerLayout.closeDrawers();
         }
@@ -169,7 +172,7 @@ public class ChatHelper {
         if (privateChats.contains(selectedItem)) {
             Intent intent = new Intent(context, ChatActivity.class);
             intent.putExtra("chatTarget", selectedItem); // Assuming 'sender' is the user who sent the private message
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             context.startActivity(intent);
         } else {
             switchToChannel(selectedItem);
@@ -195,6 +198,9 @@ public class ChatHelper {
                 privateMessageListener.onPrivateMessageReceived(sender, message);
                 if (!GlobalMessageListener.getInstance().isUserInPrivateChats(sender)) {
                     GlobalMessageListener.getInstance().addPrivateChat(sender);
+                    SharedDataSource.getInstance().storePrivateMessage(sender, message);
+
+
                     Log.d("ChatHelper", "Sending Private Message To: " + sender);
                     Intent serviceIntent = new Intent(context, MessageService.class);
                     context.startService(serviceIntent);
@@ -204,6 +210,8 @@ public class ChatHelper {
                     if (drawerListRefreshListener != null) {
                         drawerListRefreshListener.onRefreshRequested();
                     }
+
+
 
 
                 }
@@ -221,7 +229,8 @@ public class ChatHelper {
         // Listner for 1st time reciving private message
         ircClient.setPrivateMessageListener((sender, message) -> {
             GlobalMessageListener.getInstance().addPrivateMessage(sender, ircClient.getNickname(), message);
-            SharedDataSource.getInstance().handlePrivateMessage(sender, message);
+            SharedDataSource.getInstance().storePrivateMessage(sender, message);
+
             Log.d("ChatHelper", "Reciving Private Message From: " + sender);
             Intent serviceIntent = new Intent(context, MessageService.class);
             context.startService(serviceIntent);
@@ -263,11 +272,15 @@ public class ChatHelper {
         appendIrcMessage(currentNickname + ": " + message);
 
 
+
         ircClient.sendMessageToChannel(recipient, message);
         GlobalMessageListener.getInstance().addPrivateMessage(ircClient.getNickname(), recipient, message);
         Log.d("ChatHelper", "Sending message to recipient: " + recipient + " with message: " + message);
-        SharedDataSource.getInstance().storeMessage(recipient, message);
+
+        // Ensure that the message is associated with the correct recipient
+        SharedDataSource.getInstance().storeMessage(recipient, currentNickname + ": " + message);
     }
+
 
 
     public void setChannelMessageListener(OnChannelMessageReceivedListener listener) {
@@ -297,23 +310,29 @@ public class ChatHelper {
 
 
     public void startPrivateChat(String targetUser) {
-
         Log.d("ChatHelper", "Starting private chat with: " + targetUser);
         Intent intent = new Intent(context, ChatActivity.class);
-        Intent serviceIntent = new Intent(context, MessageService.class);
+        intent.putExtra("chatTarget", targetUser); // Pass the target user to the ChatActivity
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        context.startActivity(intent); // Start the ChatActivity
 
+        Intent serviceIntent = new Intent(context, MessageService.class);
         context.startService(serviceIntent);
     }
 
+
+
     private void appendIrcMessage(String fullMessage) {
-        Spannable coloredMessage = MircColors.toSpannable(fullMessage);
+        Links linksHandler = new Links(context);
+        String detectedUrls = linksHandler.detectUrls(fullMessage);
+        String processedMessage = detectedUrls.isEmpty() ? fullMessage : String.join(", ", detectedUrls);
+
+        Spannable coloredMessage = MircColors.toSpannable(processedMessage);
         chatHistory.add(coloredMessage.toString());
-        Log.d("ChatHelper", "Appended message to chatHistory: " + fullMessage);
+        Log.d("ChatHelper", "Appended message to chatHistory: " + processedMessage);
 
         // Store the message in SharedDataSource
         SharedDataSource.getInstance().storeMessage(channelName, coloredMessage.toString());
-
-
 
         new Handler(Looper.getMainLooper()).post(() -> {
             chatTextView.append(coloredMessage);
@@ -328,8 +347,12 @@ public class ChatHelper {
     }
 
     public void displayChatHistory(TextView chatTextView) {
+        Links linksHandler = new Links(context);
+
         for (String rawMessage : chatHistory) {
-            Spannable coloredMessage = MircColors.toSpannable(rawMessage);
+            String detectedUrls = linksHandler.detectUrls(rawMessage);
+            String processedMessage = detectedUrls.isEmpty() ? rawMessage : String.join(", ", detectedUrls);
+            Spannable coloredMessage = MircColors.toSpannable(processedMessage);
             chatTextView.append(coloredMessage);
             chatTextView.append("\n");
         }
@@ -338,7 +361,9 @@ public class ChatHelper {
         List<String> storedMessages = SharedDataSource.getInstance().getStoredMessages(channelName);
 
         for (String message : storedMessages) {
-            Spannable coloredMessage = MircColors.toSpannable(message);
+            String detectedUrls = linksHandler.detectUrls(message);
+            String processedMessage = detectedUrls.isEmpty() ? message : String.join(", ", detectedUrls);
+            Spannable coloredMessage = MircColors.toSpannable(processedMessage);
             chatTextView.append(coloredMessage);
             chatTextView.append("\n");
         }
@@ -369,6 +394,7 @@ public class ChatHelper {
     public void setChannelName(String channelName) {
         this.channelName = channelName;
     }
+
 
 
     public void handleSendMessage(String channel, String message) {

@@ -1,0 +1,16 @@
+<!-- res/drawable/ic_message.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10 -4.48,-10 -10,-10zM12,22c-4.41,0 -8,-3.59 -8,-8 0,-1.85 0.63,-3.55 1.69,-4.9L4,5.7v1.52c0,1.33 0.52,2.62 1.46,3.56 0.94,0.94 2.23,1.46 3.56,1.46h0.28c1.23,0.48 2.56,0.76 3.92,0.76 1.33,0 2.61,-0.27 3.77,-0.76 0.61,-0.21 1.17,-0.5 1.69,-0.83v-0.83l-0.69,0.69C20.37,8.45 21,10.15 21,12c0,4.41 -3.59,8 -8,8z"/>
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M4,4l8,5 8,-5 -8,10z"/>
+
+</vector>

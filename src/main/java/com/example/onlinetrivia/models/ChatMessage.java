@@ -14,6 +14,9 @@ public class ChatMessage {
     private String messageContent;
     private long timestamp;
 
+    private String recipient;
+
+
     // Constructor
     public ChatMessage(String chatName, String sender, String messageContent, long timestamp) {
         this.chatName = chatName;
@@ -21,6 +24,15 @@ public class ChatMessage {
         this.messageContent = messageContent;
         this.timestamp = timestamp;
     }
+
+    public String getRecipient() {
+        return recipient;
+    }
+
+    public void setRecipient(String recipient) {
+        this.recipient = recipient;
+    }
+
 
     // Getters and Setters
 
